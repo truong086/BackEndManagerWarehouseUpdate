@@ -13,5 +13,6 @@ namespace quanlykhoupdate.Service
         Task<PayLoad<object>> FindAllNoIsActionNoPack(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindAllOkIsActionNoPack(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindAllOkIsActionOkPack(int page = 1, int pageSize = 20);
+        Task<PayLoad<object>> FindCode(string code);
     }
 }

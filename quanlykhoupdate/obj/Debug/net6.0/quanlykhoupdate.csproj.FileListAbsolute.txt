@@ -74,3 +74,4 @@ C:\Users\ASUS\source\repos\quanlykhoupdate\quanlykhoupdate\obj\Debug\net6.0\refi
 C:\Users\ASUS\source\repos\quanlykhoupdate\quanlykhoupdate\obj\Debug\net6.0\quanlykhoupdate.pdb
 C:\Users\ASUS\source\repos\quanlykhoupdate\quanlykhoupdate\obj\Debug\net6.0\quanlykhoupdate.genruntimeconfig.cache
 C:\Users\ASUS\source\repos\quanlykhoupdate\quanlykhoupdate\obj\Debug\net6.0\ref\quanlykhoupdate.dll
+C:\Users\ASUS\source\repos\quanlykhoupdate\quanlykhoupdate\obj\Debug\net6.0\quanlykhoupdate.sourcelink.json

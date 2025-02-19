@@ -18,6 +18,8 @@
         public int? quantity { get; set; }
         public int? quantityProduct { get; set; }
         public string? code { get; set; }
+        public bool? isAction { get; set; }
+        public bool? isPack { get; set; }
         public List<LocationDataInbound>? locationDataInbounds { get; set; }    
     }
     public class LocationDataInbound
@@ -28,5 +30,6 @@
         public string? area { get; set; }
         public string? line { get; set; }
         public string? shelf { get; set; }
+        public int? quantity { get; set; }
     }
 }

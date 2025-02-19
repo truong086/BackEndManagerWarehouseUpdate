@@ -43,5 +43,12 @@ namespace quanlykhoupdate.Controllers
         {
             return await _inboundService.FindAllNoIsAction(page, pageSize);
         }
+
+        [HttpGet]
+        [Route(nameof(FindCode))]
+        public async Task<PayLoad<object>> FindCode(string code)
+        {
+            return await _inboundService.FindCode(code);
+        }
     }
 }

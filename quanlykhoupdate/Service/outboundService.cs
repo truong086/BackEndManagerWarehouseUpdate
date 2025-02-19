@@ -269,6 +269,8 @@ namespace quanlykhoupdate.Service
             dataItem.quantity = _context.outbound_product.Where(x => x.outbound_id == item.id).Count();
             dataItem.quantityProduct = _context.outbound_product.Where(x => x.outbound_id == item.id).Sum(x => x.quantity);
             dataItem.locationDataInbounds = loadLocationData(item.id);
+            dataItem.isAction = item.is_action;
+            dataItem.isPack = item.is_pocked;
             return dataItem;
         }
 
@@ -289,11 +291,30 @@ namespace quanlykhoupdate.Service
                         line = checkLocation.location_Addrs.line,
                         shelf = checkLocation.location_Addrs.shelf,
                         code = checkLocation.location_Addrs.code_location_addr,
+                        quantity = item.quantity
                     });
             }
 
             return list;
 
+        }
+
+        public async Task<PayLoad<object>> FindCode(string code)
+        {
+            try
+            {
+                var data = _context.outbound.FirstOrDefault(x => x.code == code);
+
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = findOneData(data)
+                }));
+
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
         }
     }
 }

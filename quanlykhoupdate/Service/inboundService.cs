@@ -2,6 +2,7 @@
 using quanlykhoupdate.common;
 using quanlykhoupdate.Models;
 using quanlykhoupdate.ViewModel;
+using System.Drawing.Printing;
 
 namespace quanlykhoupdate.Service
 {
@@ -116,6 +117,7 @@ namespace quanlykhoupdate.Service
             dataItem.quantity = _context.inbound_product.Where(x => x.inbound_id == item.id).Count();
             dataItem.quantityProduct = _context.inbound_product.Where(x => x.inbound_id == item.id).Sum(x => x.quantity);
             dataItem.locationDataInbounds = loadLocationData(item.id);
+            dataItem.isAction = item.is_action;
             return dataItem;
         }
 
@@ -136,6 +138,7 @@ namespace quanlykhoupdate.Service
                         line = checkLocation.location_Addrs.line,
                         shelf = checkLocation.location_Addrs.shelf,
                         code = checkLocation.location_Addrs.code_location_addr,
+                        quantity = item.quantity
                     });
             }
 
@@ -201,6 +204,24 @@ namespace quanlykhoupdate.Service
                     _context.product_location.Update(checkProductLocation);
                     _context.SaveChanges();
                 }
+            }
+        }
+
+        public async Task<PayLoad<object>> FindCode(string code)
+        {
+            try
+            {
+                var data = _context.inbound.FirstOrDefault(x => x.code == code);
+
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = findOneData(data)
+                }));
+
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
             }
         }
     }
