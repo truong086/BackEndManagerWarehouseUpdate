@@ -22,6 +22,8 @@ namespace quanlykhoupdate.Service
                 var checkLocationOld = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_old);
                 var checkLocationNew = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_new);
 
+                if(checkLocationOld == null ||  checkLocationNew == null)
+                    return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
 
                 var checkLocationCodeOld = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationOld.id);
                 var checkLocationCodeNew = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationNew.id);
