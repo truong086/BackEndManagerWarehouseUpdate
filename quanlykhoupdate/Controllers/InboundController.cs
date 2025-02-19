@@ -25,7 +25,7 @@ namespace quanlykhoupdate.Controllers
 
         [HttpPut]
         [Route(nameof(Update))]
-        public async Task<PayLoad<UpdateCodeInbound>> Update(UpdateCodeInbound inboundDTO)
+        public async Task<PayLoad<UpdateCodeInbound>> Update(List<UpdateCodeInbound> inboundDTO)
         {
             return await _inboundService.UpdateCode(inboundDTO);
         }

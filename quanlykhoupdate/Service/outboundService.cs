@@ -190,22 +190,28 @@ namespace quanlykhoupdate.Service
             }
         }
 
-        public async Task<PayLoad<UpdateCodeInbound>> UpdateCode(UpdateCodeInbound inboundDTO)
+        public async Task<PayLoad<UpdateCodeInbound>> UpdateCode(List<UpdateCodeInbound> inboundDTO)
         {
             try
             {
-                var checkData = _context.outbound.FirstOrDefault(x => x.code == inboundDTO.code);
-                if (checkData == null)
-                    return await Task.FromResult(PayLoad<UpdateCodeInbound>.CreatedFail(Status.DATANULL));
+                foreach(var item in inboundDTO) 
+                {
+                    var checkData = _context.outbound.FirstOrDefault(x => x.code == item.code);
+                    if (checkData == null)
+                        return await Task.FromResult(PayLoad<UpdateCodeInbound>.CreatedFail(Status.DATANULL));
 
-                updateLocationQuantity(checkData);
+                    updateLocationQuantity(checkData);
 
-                checkData.is_action = true;
+                    checkData.is_action = true;
 
-                _context.outbound.Update(checkData);
-                _context.SaveChanges();
+                    _context.outbound.Update(checkData);
+                    _context.SaveChanges();
+                }
 
-                return await Task.FromResult(PayLoad<UpdateCodeInbound>.Successfully(inboundDTO));
+                return await Task.FromResult(PayLoad<UpdateCodeInbound>.Successfully(new UpdateCodeInbound
+                {
+                    code = Status.SUCCESS
+                }));
             }
             catch (Exception ex)
             {

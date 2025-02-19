@@ -6,7 +6,7 @@ namespace quanlykhoupdate.Service
     public interface IoutboundService
     {
         Task<PayLoad<inboundDTO>> Add(inboundDTO inboundDTO);
-        Task<PayLoad<UpdateCodeInbound>> UpdateCode(UpdateCodeInbound inboundDTO);
+        Task<PayLoad<UpdateCodeInbound>> UpdateCode(List<UpdateCodeInbound> inboundDTO);
         Task<PayLoad<string>> UpdateCodePack(string code);
         Task<PayLoad<object>> FindAll(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindAllNoIsActionOkpack(int page = 1, int pageSize = 20);
