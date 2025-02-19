@@ -32,9 +32,32 @@ namespace quanlykhoupdate.Controllers
 
         [HttpGet]
         [Route(nameof(FindAll))]
-        public async Task<PayLoad<object>> FindAll()
+        public async Task<PayLoad<object>> FindAll(int page = 1, int pageSize = 20)
         {
-            return await _planService.FindAll();
+            return await _planService.FindAll(page, pageSize);
+        }
+
+        [HttpGet]
+        [Route(nameof(FindAllDone))]
+        public async Task<PayLoad<object>> FindAllDone(int page = 1, int pageSize = 20)
+        {
+            return await _planService.FindAllDone(page, pageSize);
+        }
+
+        [HttpGet]
+        [Route(nameof(FindOne))]
+        public async Task<PayLoad<object>> FindOne(int id)
+        {
+            return await _planService.FindOne(id);
+        }
+
+        [HttpPost]
+        [Route(nameof(FindAllDownLoadExcel))]
+        public IActionResult FindAllDownLoadExcel(searchDatetimePlan data)
+        {
+            byte[] dataFile = _planService.FindAllDownLoadExcel(data);
+
+            return File(dataFile, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DataExcelPlan.xlsx");
         }
 
         [HttpDelete]
@@ -42,6 +65,13 @@ namespace quanlykhoupdate.Controllers
         public async Task<PayLoad<string>> Delete(int id)
         {
             return await _planService.Delete(id);
+        }
+
+        [HttpPut]
+        [Route(nameof(UpdateData))]
+        public async Task<PayLoad<PlanDTO>> UpdateData(int id, PlanDTO data)
+        {
+            return await _planService.UpdateData(id, data);
         }
     }
 }

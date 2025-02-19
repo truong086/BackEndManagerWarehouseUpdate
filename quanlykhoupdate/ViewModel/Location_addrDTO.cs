@@ -7,5 +7,6 @@
         public string? area { get; set; }
         public string? line { get; set; }
         public string? shelf { get; set; }
+        public List<object>? history { get; set; }
     }
 }

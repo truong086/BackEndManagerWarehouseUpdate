@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml.Style;
+using OfficeOpenXml;
 using quanlykhoupdate.common;
 using quanlykhoupdate.Models;
 using quanlykhoupdate.ViewModel;
@@ -63,7 +65,7 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var checkData = _context.plan.FirstOrDefault(x => x.id == id);
+                var checkData = _context.plan.FirstOrDefault(x => x.id == id && x.status != 1);
                 if(checkData == null)
                     return await Task.FromResult(PayLoad<string>.CreatedFail(Status.DATANULL));
 
@@ -78,13 +80,21 @@ namespace quanlykhoupdate.Service
             }
         }
 
-        public async Task<PayLoad<object>> FindAll()
+        public async Task<PayLoad<object>> FindAll(int page = 1, int pageSize = 20)
         {
             try
             {
                 var data = _context.plan.Where(x => x.status != 1).ToList();
 
-                return await Task.FromResult(PayLoad<object>.Successfully(loadData(data)));
+                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
             }
             catch(Exception ex)
             {
@@ -92,9 +102,26 @@ namespace quanlykhoupdate.Service
             }
         }
 
-        public Task<PayLoad<object>> FindAllDone()
+        public async Task<PayLoad<object>> FindAllDone(int page = 1, int pageSize = 20)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var data = _context.plan.Where(x => x.status == 1).ToList();
+
+                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
         }
 
         private List<FindAllPlanData> loadData(List<plan> data)
@@ -103,26 +130,46 @@ namespace quanlykhoupdate.Service
 
             foreach (var plan in data)
             {
-                var checkDataOld = _context.location_addr.Select(x => new
-                {
-                    id = x.id,
-                    locationOld = x.code_location_addr
-                }).FirstOrDefault(x => x.id == plan.location_addr_id_old);
-                var checkDataNew = _context.location_addr.Select(x => new
-                {
-                    id = x.id,
-                    locationNew = x.code_location_addr
-                }).FirstOrDefault(x => x.id == plan.location_addr_id_new);
-
-                list.Add(new FindAllPlanData
-                {
-                    id = plan.id,
-                    locationNew = checkDataNew.locationNew,
-                    locationOld = checkDataOld.locationOld
-                });
+                
+                list.Add(findOneDataPlan(plan));
             }
 
             return list;
+        }
+
+        private FindAllPlanData findOneDataPlan(plan item)
+        {
+            
+            var checkDataOld = _context.location_addr.Select(x => new
+            {
+                id = x.id,
+                locationOld = x.code_location_addr,
+                area = x.area,
+                line = x.line,
+                shelf = x.shelf,
+            }).FirstOrDefault(x => x.id == item.location_addr_id_old);
+            var checkDataNew = _context.location_addr.Select(x => new
+            {
+                id = x.id,
+                locationNew = x.code_location_addr,
+                area = x.area,
+                line = x.line,
+                shelf = x.shelf,
+            }).FirstOrDefault(x => x.id == item.location_addr_id_new);
+
+            return new FindAllPlanData
+            {
+                id = item.id,
+                locationNew = checkDataNew.locationNew,
+                areaNew = checkDataNew.area,
+                lineNew = checkDataNew.line,
+                shelfNew = checkDataNew.shelf,
+                locationOld = checkDataOld.locationOld,
+                areaOld = checkDataOld.area,
+                lineOld = checkDataOld.line,
+                shelfOld = checkDataOld.shelf,
+                status = item.status
+            };
         }
         public async Task<PayLoad<UpdatePlan>> Update(UpdatePlan planData)
         {
@@ -174,6 +221,118 @@ namespace quanlykhoupdate.Service
                     _context.SaveChanges();
 
                 }
+            }
+        }
+
+        public async Task<PayLoad<object>> FindOne(int id)
+        {
+            try
+            {
+                var data = _context.plan.FirstOrDefault(x => x.id == id);
+
+                return await Task.FromResult(PayLoad<object>.Successfully(findOneDataPlan(data)));
+            }catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public byte[] FindAllDownLoadExcel(searchDatetimePlan data)
+        {
+            var list = _context.plan.Where(x => x.time >= data.datefrom && x.time <= data.dateto).ToList();
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Products");
+                worksheet.Cells[1, 1].Value = "ID";
+                worksheet.Cells[1, 2].Value = "Area New";
+                worksheet.Cells[1, 3].Value = "Line New";
+                worksheet.Cells[1, 4].Value = "Shelf New";
+                worksheet.Cells[1, 5].Value = "Code New";
+                worksheet.Cells[1, 6].Value = "Area Old";
+                worksheet.Cells[1, 7].Value = "Line Old";
+                worksheet.Cells[1, 8].Value = "Shelf Old";
+                worksheet.Cells[1, 9].Value = "Code Old";
+
+                // Định dạng tiêu đề
+                using (var range = worksheet.Cells[1, 1, 1, 5])
+                {
+                    range.Style.Font.Bold = true; // Chữ in đậm
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+                }
+
+                // Đổ dữ liệu vào file Excel
+                int row = 2;
+                foreach (var product in loadData(list))
+                {
+                    worksheet.Cells[row, 1].Value = product.id;
+                    worksheet.Cells[row, 2].Value = product.areaNew;
+                    worksheet.Cells[row, 3].Value = product.lineNew;
+                    worksheet.Cells[row, 4].Value = product.shelfNew;
+                    worksheet.Cells[row, 5].Value = product.locationNew;
+
+                    worksheet.Cells[row, 6].Value = product.areaOld;
+                    worksheet.Cells[row, 7].Value = product.lineOld;
+                    worksheet.Cells[row, 8].Value = product.shelfOld;
+                    worksheet.Cells[row, 9].Value = product.locationOld;
+
+                    row++;
+                }
+
+                worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+                return package.GetAsByteArray();
+            }
+        }
+
+        public Task<PayLoad<object>> FindAllNoDone(int page = 1, int pageSize = 20)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<PayLoad<PlanDTO>> UpdateData(int id, PlanDTO planDTO)
+        {
+            try
+            {
+                var checkPlanId = _context.plan.FirstOrDefault(x => x.id == id);
+                
+                if(checkPlanId == null)
+                    return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
+
+                var checkLocationOld = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_old);
+                var checkLocationNew = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_new);
+
+                if (checkLocationOld == null || checkLocationNew == null)
+                    return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
+
+                var checkLocationCodeOld = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationOld.id);
+                var checkLocationCodeNew = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationNew.id);
+
+                if (checkLocationOld == null || checkLocationNew == null || checkLocationCodeOld == null || checkLocationCodeNew == null)
+                    return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
+
+                var checkPlan = _context.plan.Where(x => (x.location_addr_id_old == checkLocationOld.id
+                || x.location_addr_id_new == checkLocationNew.id || x.location_addr_id_old == checkLocationNew.id ||
+                x.location_addr_id_new == checkLocationOld.id) && x.status != 1 && x.id != checkPlanId.id).FirstOrDefault();
+
+                if (checkPlan != null)
+                    return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATATONTAI));
+
+                checkPlanId.location_addr_id_new = checkLocationNew.id;
+                checkPlanId.location_Addr_New = checkLocationNew;
+                checkPlanId.location_addr_id_old = checkLocationOld.id;
+                checkPlanId.location_Addr_Old = checkLocationOld;
+
+                _context.plan.Update(checkPlanId);
+
+                _context.SaveChanges();
+                await _userTokenService.SendNotify();
+
+                return await Task.FromResult(PayLoad<PlanDTO>.Successfully(planDTO));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(ex.Message));
             }
         }
     }
