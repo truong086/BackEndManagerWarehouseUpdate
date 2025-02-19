@@ -42,7 +42,7 @@ builder.Services.AddCors(options =>
 // Đăng ký Firebase Key
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile("/home/tsustedu2025_ADMIN/quanlykhodlBE/quanlykhodl/quanlykhodl/notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
+    Credential = GoogleCredential.FromFile("/home/tsustedu2025_ADMIN/BackEndManagerWarehouseUpdate/quanlykhoupdate/notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
     //Credential = GoogleCredential.FromFile("C:\\Users\\ASUS\\OneDrive\\Desktop\\VueJs\\SpringBoot\\notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
 });
 
