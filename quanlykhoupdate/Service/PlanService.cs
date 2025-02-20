@@ -84,7 +84,7 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var data = _context.plan.Where(x => x.status != 1).ToList();
+                var data = _context.plan.Where(x => x.status != 1).OrderByDescending(x => x.id).ToList();
 
                 var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
@@ -106,7 +106,7 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var data = _context.plan.Where(x => x.status == 1).ToList();
+                var data = _context.plan.Where(x => x.status == 1).OrderByDescending(x => x.id).ToList();
 
                 var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new

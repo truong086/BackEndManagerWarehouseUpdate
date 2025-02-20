@@ -24,5 +24,6 @@
         public string? area { get; set; }
         public string? line { get; set; }
         public string? shelf { get; set; }
+        public int? quantity { get; set; }
     } 
 }

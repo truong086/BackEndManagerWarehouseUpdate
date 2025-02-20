@@ -15,13 +15,17 @@ namespace quanlykhoupdate.Service
         }
         public async Task<PayLoad<UserToKenAppDTO>> Add(UserToKenAppDTO add)
         {
-            _context.usetokenapp.Add(new usetokenapp
+            var checkToken = _context.usetokenapp.FirstOrDefault(x => x.token == add.token);
+            if(checkToken == null)
             {
-                token = add.token
-            });
+                _context.usetokenapp.Add(new usetokenapp
+                {
+                    token = add.token
+                });
 
-            _context.SaveChanges();
-
+                _context.SaveChanges();
+            }
+            
             return await Task.FromResult(PayLoad<UserToKenAppDTO>.Successfully(add));
         }
 

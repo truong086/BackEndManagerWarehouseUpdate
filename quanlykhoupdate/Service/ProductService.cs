@@ -107,6 +107,7 @@ namespace quanlykhoupdate.Service
                         area = lc.location_Addrs.area,
                         line = lc.location_Addrs.line,
                         shelf = lc.location_Addrs.shelf,
+                        quantity = lc.quantity
 
                     }).ToList(),
                     history = loadDataHistory(data)
@@ -193,11 +194,7 @@ namespace quanlykhoupdate.Service
                     }
                     list.Add(checkLocation);
                 }
-                
             }
-
-
-
             return list;
         }
     }
