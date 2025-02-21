@@ -219,6 +219,21 @@ namespace quanlykhoupdate.Service
             }
         }
 
+        private void saveUpdateHistory(int? productId, int locationAddrId, int quantity)
+        {
+            var updateHistory = new update_history
+            {
+                product_id = productId,
+                location_addr_id = locationAddrId,
+                quantity = quantity,
+                status = 0,
+                last_modify_date = DateTime.UtcNow
+            };
+
+            _context.update_history.Add(updateHistory);
+            _context.SaveChanges();
+        }
+
         public async Task<PayLoad<string>> UpdateCodePack(string code)
         {
             try
@@ -251,6 +266,8 @@ namespace quanlykhoupdate.Service
                     checkProductLocation.quantity -= item.quantity;
                     _context.product_location.Update(checkProductLocation);
                     _context.SaveChanges();
+
+                    saveUpdateHistory(item.product_id, checkProductLocation.id, item.quantity);
                 }
             }
         }

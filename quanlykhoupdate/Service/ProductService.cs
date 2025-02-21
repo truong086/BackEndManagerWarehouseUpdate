@@ -128,14 +128,17 @@ namespace quanlykhoupdate.Service
             var productLocation = _context.product_location.Where(x => x.product_id == id).ToList();
             foreach(var item in productLocation)
             {
+                
                 var checkDataLcoation = _context.location_addr.FirstOrDefault(x => x.id == item.location_addr_id);
                 list.Add(new dataLocation
                 {
                     area = checkDataLcoation.area,
                     line = checkDataLcoation.line,
                     shelf = checkDataLcoation.shelf,
-                    code = checkDataLcoation.code_location_addr
+                    code = checkDataLcoation.code_location_addr,
+                    
                 });
+                
             }
 
             return list;

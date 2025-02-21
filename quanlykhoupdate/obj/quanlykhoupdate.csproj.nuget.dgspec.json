@@ -1,34 +1,28 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ASUS\\source\\repos\\quanlykhoupdate\\quanlykhoupdate\\quanlykhoupdate.csproj": {}
+    "/Users/macbook/Documents/Project/LogisticApp/BackendUpdate1/BackEndManagerWarehouseUpdate/quanlykhoupdate/quanlykhoupdate.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ASUS\\source\\repos\\quanlykhoupdate\\quanlykhoupdate\\quanlykhoupdate.csproj": {
+    "/Users/macbook/Documents/Project/LogisticApp/BackendUpdate1/BackEndManagerWarehouseUpdate/quanlykhoupdate/quanlykhoupdate.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ASUS\\source\\repos\\quanlykhoupdate\\quanlykhoupdate\\quanlykhoupdate.csproj",
+        "projectUniqueName": "/Users/macbook/Documents/Project/LogisticApp/BackendUpdate1/BackEndManagerWarehouseUpdate/quanlykhoupdate/quanlykhoupdate.csproj",
         "projectName": "quanlykhoupdate",
-        "projectPath": "C:\\Users\\ASUS\\source\\repos\\quanlykhoupdate\\quanlykhoupdate\\quanlykhoupdate.csproj",
-        "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ASUS\\source\\repos\\quanlykhoupdate\\quanlykhoupdate\\obj\\",
+        "projectPath": "/Users/macbook/Documents/Project/LogisticApp/BackendUpdate1/BackEndManagerWarehouseUpdate/quanlykhoupdate/quanlykhoupdate.csproj",
+        "packagesPath": "/Users/macbook/.nuget/packages/",
+        "outputPath": "/Users/macbook/Documents/Project/LogisticApp/BackendUpdate1/BackEndManagerWarehouseUpdate/quanlykhoupdate/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/macbook/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://nuget.heymenu.net/nuget/public": {}
+          "/usr/local/share/dotnet/library-packs": {},
+          "/usr/local/share/dotnet/sdk/7.0.317/Sdks/Microsoft.NET.Sdk.Web/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net6.0": {
@@ -100,6 +94,20 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[6.0.31, 6.0.31]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.osx-arm64",
+              "version": "[6.0.31, 6.0.31]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[6.0.31, 6.0.31]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -108,7 +116,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.317/RuntimeIdentifierGraph.json"
         }
       }
     }
