@@ -28,8 +28,8 @@ var corsBuilder = new CorsPolicyBuilder();
 corsBuilder.AllowAnyHeader();
 corsBuilder.AllowAnyMethod();
 corsBuilder.AllowAnyOrigin();
-corsBuilder.WithOrigins("http://52.184.83.97:8081"); // Đây là Url bên frontEnd
-//corsBuilder.WithOrigins("http://localhost:8081"); // Đây là Url bên frontEnd
+//corsBuilder.WithOrigins("http://52.184.83.97:8081"); // Đây là Url bên frontEnd
+corsBuilder.WithOrigins("http://localhost:8081"); // Đây là Url bên frontEnd
 corsBuilder.AllowCredentials();
 builder.Services.AddCors(options =>
 {
@@ -42,8 +42,8 @@ builder.Services.AddCors(options =>
 // Đăng ký Firebase Key
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile("/home/tsustedu2025_ADMIN/BackEndManagerWarehouseUpdate/quanlykhoupdate/notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
-    //Credential = GoogleCredential.FromFile("C:\\Users\\ASUS\\OneDrive\\Desktop\\VueJs\\SpringBoot\\notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
+    //Credential = GoogleCredential.FromFile("/home/tsustedu2025_ADMIN/BackEndManagerWarehouseUpdate/quanlykhoupdate/notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
+    Credential = GoogleCredential.FromFile("C:\\Users\\ASUS\\OneDrive\\Desktop\\VueJs\\SpringBoot\\notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
 });
 
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -121,6 +121,7 @@ builder.Services.AddScoped<IPlanService, PlanService>();
 builder.Services.AddScoped<IUserTokenService, UserTokenService>();
 builder.Services.AddScoped<IinboundService, inboundService>();
 builder.Services.AddScoped<IoutboundService, outboundService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDistributedMemoryCache();
