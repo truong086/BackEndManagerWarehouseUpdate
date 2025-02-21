@@ -1,4 +1,5 @@
 ﻿using quanlykhoupdate.common;
+using quanlykhoupdate.ViewModel;
 
 namespace quanlykhoupdate.Service
 {
@@ -11,5 +12,8 @@ namespace quanlykhoupdate.Service
         Task<PayLoad<object>> findOneCode(string? name);
         Task<PayLoad<string>> AddDataSupplier();
         Task<PayLoad<object>> ImportDataExcel(IFormFile file);
+        byte[] FindAllDownLoadExcel(int id);
+        byte[] FindAllDownLoadExcelByCodeProduct(string code);
+        byte[] FindAllDownLoadExcelByCodeProductList(List<string> code);
     }
 }

@@ -13,5 +13,6 @@ namespace quanlykhoupdate.Models
         public ICollection<product_location>? product_Locations { get; set; }
         public ICollection<inbound_product>? inbound_Products { get; set; }
         public ICollection<outbound_product>? outbound_Products { get; set; }
+        public ICollection<update_history>? update_Histories { get; set; }
     }
 }

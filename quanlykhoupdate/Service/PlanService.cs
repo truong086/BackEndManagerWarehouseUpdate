@@ -4,6 +4,7 @@ using OfficeOpenXml;
 using quanlykhoupdate.common;
 using quanlykhoupdate.Models;
 using quanlykhoupdate.ViewModel;
+using System.Drawing.Printing;
 
 namespace quanlykhoupdate.Service
 {
@@ -168,7 +169,8 @@ namespace quanlykhoupdate.Service
                 areaOld = checkDataOld.area,
                 lineOld = checkDataOld.line,
                 shelfOld = checkDataOld.shelf,
-                status = item.status
+                status = item.status,
+                updateat = item.time
             };
         }
         public async Task<PayLoad<UpdatePlan>> Update(UpdatePlan planData)
@@ -336,17 +338,17 @@ namespace quanlykhoupdate.Service
             }
         }
 
-        public async Task<PayLoad<object>> FindAllDataByDone(searchDatetimePlan dataTime, int page = 1, int pageSize = 20)
+        public async Task<PayLoad<object>> FindAllDataByDone(searchDataPost datas)
         {
             try
             {
-                var data = _context.plan.Where(x => x.status == 1 && x.time >= dataTime.datefrom && x.time <= dataTime.dateto).OrderByDescending(x => x.id).ToList();
+                var data = _context.plan.Where(x => x.time >= datas.datefrom && x.time <= datas.dateto).OrderByDescending(x => x.id).ToList();
 
-                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                var pageList = new PageList<object>(loadData(data), datas.page - 1, datas.pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
-                    page,
+                    datas.page,
                     pageList.pageSize,
                     pageList.totalCounts,
                     pageList.totalPages
@@ -368,6 +370,28 @@ namespace quanlykhoupdate.Service
                     data = checkData
                 }));
             }catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> FindByDataTimeAll(searchDatetimePlan data, int page = 1, int pageSize = 20)
+        {
+            try
+            {
+                var dataList = _context.plan.OrderByDescending(x => x.id).ToList();
+
+                var pageList = new PageList<object>(loadData(dataList), page - 1, pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
+            }
+            catch (Exception ex)
             {
                 return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
             }

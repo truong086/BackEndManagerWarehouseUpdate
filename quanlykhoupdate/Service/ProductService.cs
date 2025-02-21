@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using quanlykhoupdate.common;
 using quanlykhoupdate.Models;
 using quanlykhoupdate.ViewModel;
+using System.Collections.Generic;
 using System.Drawing.Printing;
 using System.Xml.Linq;
 
@@ -149,14 +151,17 @@ namespace quanlykhoupdate.Service
             var productLocation = _context.product_location.Where(x => x.product_id == id).ToList();
             foreach(var item in productLocation)
             {
+                
                 var checkDataLcoation = _context.location_addr.FirstOrDefault(x => x.id == item.location_addr_id);
                 list.Add(new dataLocation
                 {
                     area = checkDataLcoation.area,
                     line = checkDataLcoation.line,
                     shelf = checkDataLcoation.shelf,
-                    code = checkDataLcoation.code_location_addr
+                    code = checkDataLcoation.code_location_addr,
+                    
                 });
+                
             }
 
             return list;
@@ -335,18 +340,28 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var list = new List<dataProductLocation>();
-
-                var checkData = _context.product.Where(x => x.warehouseID == id).ToList();
-                if (checkData == null)
-                    return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
-
-                foreach (var item in checkData)
+                var checkDataSupplier = await _context.product.Where(x => x.warehouseID == id)
+            .Include(x => x.suppliers)
+            .Include(pl => pl.product_Locations)
+            .ThenInclude(l => l.location_Addrs)
+            .AsNoTracking()
+            .Select(x => new dataProductLocation
+            {
+                Id = x.id,
+                title = x.title,
+                nameSupplier = x.suppliers.title,
+                dataLocations = x.product_Locations.Select(lc => new dataLocation
                 {
-                    list.Add(loadDataFindOne(item));
-                }
+                    code = lc.location_Addrs.code_location_addr,
+                    area = lc.location_Addrs.area,
+                    line = lc.location_Addrs.line,
+                    shelf = lc.location_Addrs.shelf,
+                    quantity = lc.quantity
 
-                var pageList = new PageList<object>(list, page - 1, pageSize);
+                }).ToList(),
+            }).ToListAsync();
+
+                var pageList = new PageList<object>(checkDataSupplier, page - 1, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -366,11 +381,211 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
+                var checkProduct = _context.product.Include(s => s.suppliers).FirstOrDefault(x => x.id == id);
+                if (checkProduct == null)
+                    return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
+
+                return await Task.FromResult(PayLoad<object>.Successfully(loadDataOutIn(checkProduct)));
             }
             catch(Exception ex)
             {
                 return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        private ProductInOut loadDataOutIn(product data)
+        {
+            return new ProductInOut
+            {
+                title = data.title,
+                quantity = _context.product_location.Where(x => x.product_id == data.id).Sum(x => x.quantity),
+                InOutByProducts = loadDataInOut(data.id),
+                supplier = data.suppliers.title,
+                history = loadDataHistory(data)
+            };
+        }
+
+        private List<InOutByProduct> loadDataInOut(int id)
+        {
+            var list = new List<InOutByProduct>();
+
+            var checkUpdateHistory = _context.update_history.Include(p => p.products).Include(l => l.location_Addrs).Where(x => x.product_id == id).ToList();
+
+            foreach (var product in checkUpdateHistory)
+            {
+                list.Add(new InOutByProduct
+                {
+                    location = product.location_Addrs.code_location_addr,
+                    updateat = product.last_modify_date,
+                    quantity = product.quantity,
+                    status = product.status
+                });
+            }
+
+            return list;
+        }
+
+        public byte[] FindAllDownLoadExcel(int id)
+        {
+            var data = _context.product.FirstOrDefault(x => x.id == id);
+
+            var dataMap = loadDataOutIn(data);
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Products");
+                worksheet.Cells[1, 1].Value = "Product";
+                worksheet.Cells[1, 2].Value = "Quantity";
+                worksheet.Cells[1, 3].Value = "Status";
+                worksheet.Cells[1, 4].Value = "Location";
+                worksheet.Cells[1, 5].Value = "Date";
+                worksheet.Cells[1, 6].Value = "Quantity";
+                worksheet.Cells[1, 7].Value = "Warehouse ID";
+
+                // Định dạng tiêu đề
+                using (var range = worksheet.Cells[1, 1, 1, 6])
+                {
+                    range.Style.Font.Bold = true; // Chữ in đậm
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+                }
+
+                // Đổ dữ liệu vào file Excel
+                int row = 2;
+
+                worksheet.Cells[row, 1].Value = dataMap.title;
+                worksheet.Cells[row, 2].Value = dataMap.quantity;
+                foreach (var product in dataMap.InOutByProducts)
+                {
+                    
+                    worksheet.Cells[row, 3].Value = product.status == 1 ? "Import" : "Deliverynote";
+                    worksheet.Cells[row, 4].Value = product.location;
+                    worksheet.Cells[row, 5].Value = product.updateat;
+                    worksheet.Cells[row, 6].Value = product.quantity;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 7].Value = dataMap.supplier;
+                worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+                return package.GetAsByteArray();
+            }
+        }
+
+        public byte[] FindAllDownLoadExcelByCodeProduct(string code)
+        {
+            var list = new List<ProductInOut>();
+            var data = _context.product.Include(s => s.suppliers).Where(x => x.title == code).ToList();
+
+            foreach(var item in data)
+            {
+                list.Add(loadDataOutIn(item));
+            }
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Products");
+                worksheet.Cells[1, 1].Value = "Product";
+                worksheet.Cells[1, 2].Value = "Quantity";
+                worksheet.Cells[1, 3].Value = "Status";
+                worksheet.Cells[1, 4].Value = "Location";
+                worksheet.Cells[1, 5].Value = "Date";
+                worksheet.Cells[1, 6].Value = "Quantity";
+                worksheet.Cells[1, 7].Value = "Warehouse ID";
+
+                // Định dạng tiêu đề
+                using (var range = worksheet.Cells[1, 1, 1, 7])
+                {
+                    range.Style.Font.Bold = true; // Chữ in đậm
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+                }
+
+                // Đổ dữ liệu vào file Excel
+                int row = 2;
+
+                int rowItem = 2;
+
+                foreach (var product in list)
+                {
+                    worksheet.Cells[row, 1].Value = product.title;
+                    worksheet.Cells[row, 2].Value = product.quantity;
+                    
+                    foreach ( var product2 in product.InOutByProducts)
+                    {
+                        worksheet.Cells[rowItem, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
+                        worksheet.Cells[rowItem, 4].Value = product2.location;
+                        worksheet.Cells[rowItem, 5].Value = product2.updateat;
+                        worksheet.Cells[rowItem, 6].Value = product2.quantity;
+
+                        rowItem++;
+                    }
+                    worksheet.Cells[row, 7].Value = product.supplier;
+                    row += rowItem;
+                    rowItem += row;
+                }
+
+                worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+                return package.GetAsByteArray();
+            }
+        }
+
+        public byte[] FindAllDownLoadExcelByCodeProductList(List<string> code)
+        {
+            var list = new List<ProductInOut>();
+            foreach (var itemData in code)
+            {
+                var data = _context.product.Include(s => s.suppliers).Where(x => x.title == itemData).ToList();
+
+                foreach (var item in data)
+                {
+                    list.Add(loadDataOutIn(item));
+                }
+            }
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Products");
+                worksheet.Cells[1, 1].Value = "Product";
+                worksheet.Cells[1, 2].Value = "Quantity";
+                worksheet.Cells[1, 3].Value = "Status";
+                worksheet.Cells[1, 4].Value = "Location";
+                worksheet.Cells[1, 5].Value = "Date";
+                worksheet.Cells[1, 6].Value = "Quantity";
+                worksheet.Cells[1, 7].Value = "Warehouse ID";
+
+                // Định dạng tiêu đề
+                using (var range = worksheet.Cells[1, 1, 1, 6])
+                {
+                    range.Style.Font.Bold = true; // Chữ in đậm
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+                }
+
+                // Đổ dữ liệu vào file Excel
+                int row = 2;
+
+                int rowItem = 2;
+
+                foreach (var product in list)
+                {
+                    worksheet.Cells[row, 1].Value = product.title;
+                    worksheet.Cells[row, 2].Value = product.quantity;
+                    foreach (var product2 in product.InOutByProducts)
+                    {
+                        worksheet.Cells[rowItem, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
+                        worksheet.Cells[rowItem, 4].Value = product2.location;
+                        worksheet.Cells[rowItem, 5].Value = product2.updateat;
+                        worksheet.Cells[rowItem, 6].Value = product2.quantity;
+
+                        rowItem++;
+                    }
+                    worksheet.Cells[row, 7].Value = product.supplier;
+                    row += rowItem;
+                }
+
+                worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+                return package.GetAsByteArray();
             }
         }
     }

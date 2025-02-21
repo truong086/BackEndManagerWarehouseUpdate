@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using quanlykhoupdate.common;
 using quanlykhoupdate.Service;
+using System.Drawing.Imaging;
 
 namespace quanlykhoupdate.Controllers
 {
@@ -24,9 +25,50 @@ namespace quanlykhoupdate.Controllers
 
         [HttpGet]
         [Route(nameof(FindOne))]
-        public async Task<PayLoad<object>> FindOne(string? name)
+        public async Task<PayLoad<object>> FindOne(string? name, int page = 1, int pageSize = 20)
         {
-            return await _productService.findOne(name);
+            return await _productService.findOne(name, page, pageSize);
+        }
+
+        [HttpGet]
+        [Route(nameof(findOneByOutAndIn))]
+        public async Task<PayLoad<object>> findOneByOutAndIn(int id)
+        {
+            return await _productService.findOneByOutAndIn(id);
+        }
+
+        [HttpGet]
+        [Route(nameof(findBySuppliers))]
+        public async Task<PayLoad<object>> findBySuppliers(int id, int page = 1, int pageSize = 20)
+        {
+            return await _productService.findBySuppliers(id, page, pageSize);
+        }
+
+        [HttpPost]
+        [Route(nameof(FindAllDownLoadExcel))]
+        public IActionResult FindAllDownLoadExcel(int id)
+        {
+            byte[] data = _productService.FindAllDownLoadExcel(id);
+
+            return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DataExcelPlanProduct.xlsx");
+        }
+
+        [HttpPost]
+        [Route(nameof(FindAllDownLoadExcelByCodeProduct))]
+        public IActionResult FindAllDownLoadExcelByCodeProduct(string code)
+        {
+            byte[] data = _productService.FindAllDownLoadExcelByCodeProduct(code);
+
+            return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DataExcelPlanProducts.xlsx");
+        }
+
+        [HttpPost]
+        [Route(nameof(FindAllDownLoadExcelByCodeProductList))]
+        public IActionResult FindAllDownLoadExcelByCodeProductList(List<string> code)
+        {
+            byte[] data = _productService.FindAllDownLoadExcelByCodeProductList(code);
+
+            return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DataExcelPlanProduct.xlsx");
         }
 
         [HttpGet]

@@ -1,0 +1,51 @@
+﻿<Properties StartupConfiguration="{0EFD5C66-B407-4D42-B551-3AB616B04F02}|quanlykhodl">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.Workbench ActiveDocument="quanlykhoupdate/Service/inboundService.cs">
+    <Files>
+      <File FileName="quanlykhoupdate/Service/IinboundService.cs" Line="8" Column="35" IsPinned="True" />
+      <File FileName="quanlykhoupdate/Program.cs" Line="127" Column="43" />
+      <File FileName="quanlykhoupdate/Properties/launchSettings.json" Line="19" Column="9" />
+      <File FileName="quanlykhoupdate/Service/PlanService.cs" Line="220" Column="60" />
+      <File FileName="quanlykhoupdate/Service/ProductService.cs" Line="8" Column="44" />
+      <File FileName="quanlykhoupdate/Models/DBContext.cs" Line="78" Column="1" />
+      <File FileName="quanlykhoupdate/Models/product_location.cs" Line="14" Column="9" />
+      <File FileName="quanlykhoupdate/Service/inboundService.cs" Line="225" Column="51" />
+      <File FileName="quanlykhoupdate/common/PayLoad.cs" Line="53" Column="1" />
+      <File FileName="quanlykhoupdate/Service/IUserTokenService.cs" Line="9" Column="31" />
+      <File FileName="quanlykhoupdate/Models/product.cs" Line="1" Column="1" />
+      <File FileName="quanlykhoupdate/Controllers/ProductController.cs" Line="34" Column="69" />
+      <File FileName="quanlykhoupdate/Service/IProductService.cs" Line="5" Column="22" />
+      <File FileName="quanlykhoupdate/Controllers/InboundController.cs" Line="13" Column="35" />
+      <File FileName="quanlykhoupdate/ViewModel/productDetails.cs" Line="1" Column="1" />
+      <File FileName="quanlykhoupdate/Models/update_history.cs" Line="21" Column="1" />
+      <File FileName="quanlykhoupdate/Models/usetokenapp.cs" Line="10" Column="6" />
+      <File FileName="quanlykhoupdate/Models/plan.cs" Line="1" Column="1" />
+      <File FileName="quanlykhoupdate/Service/outboundService.cs" Line="229" Column="27" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="quanlykhoupdate">
+            <Node name="quanlykhoupdate">
+              <Node name="common" expanded="True" />
+              <Node name="Controllers" expanded="True" />
+              <Node name="Properties" expanded="True" />
+              <Node name="Service">
+                <Node name="inboundService.cs" selected="True" />
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.quanlykhoupdate PreferredExecutionTarget="/Applications/Google Chrome.app" />
+  <MultiItemStartupConfigurations />
+</Properties>

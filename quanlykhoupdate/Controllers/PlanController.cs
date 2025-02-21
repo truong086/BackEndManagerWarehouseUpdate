@@ -37,6 +37,13 @@ namespace quanlykhoupdate.Controllers
             return await _planService.FindAll(page, pageSize);
         }
 
+        [HttpPost]
+        [Route(nameof(FindAllDataByDone))]
+        public async Task<PayLoad<object>> FindAllDataByDone(searchDataPost data)
+        {
+            return await _planService.FindAllDataByDone(data);
+        }
+
         [HttpGet]
         [Route(nameof(FindAllDone))]
         public async Task<PayLoad<object>> FindAllDone(int page = 1, int pageSize = 20)

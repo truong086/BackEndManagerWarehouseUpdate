@@ -13,6 +13,7 @@ namespace quanlykhoupdate.Service
         {
             _context = context;
         }
+
         public async Task<PayLoad<inboundDTO>> Add(inboundDTO inboundDTO)
         {
             try
@@ -36,7 +37,7 @@ namespace quanlykhoupdate.Service
 
                 return await Task.FromResult(PayLoad<inboundDTO>.Successfully(inboundDTO));
             }
-            catch (Exception ex)
+            catch (Exception ex)    
             {
                 return await Task.FromResult(PayLoad<inboundDTO>.CreatedFail(ex.Message));
             }
@@ -74,6 +75,7 @@ namespace quanlykhoupdate.Service
             }
             return true;
         }
+
         public async Task<PayLoad<object>> FindAll(int page = 1, int pageSize = 20)
         {
             try
@@ -209,8 +211,25 @@ namespace quanlykhoupdate.Service
                     checkProductLocation.quantity += item.quantity;
                     _context.product_location.Update(checkProductLocation);
                     _context.SaveChanges();
+
+                    saveUpdateHistory(item.product_id, checkProductLocation.id, item.quantity);
                 }
             }
+        }
+
+        private void saveUpdateHistory(int? productId, int locationAddrId, int quantity)
+        {
+            var updateHistory = new update_history
+            {
+                product_id = productId,
+                location_addr_id = locationAddrId,
+                quantity = quantity,
+                status = 1, 
+                last_modify_date = DateTime.UtcNow
+            };
+
+            _context.update_history.Add(updateHistory);
+            _context.SaveChanges();
         }
 
         public async Task<PayLoad<object>> FindCode(string code)

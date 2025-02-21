@@ -10,6 +10,7 @@ namespace quanlykhoupdate.Models
         public string? shelf { get; set; }
 
         public virtual ICollection<product_location>? product_Locations { get; set; }
+        public virtual ICollection<update_history>? Update_Histories { get; set; }
 
     }
 }

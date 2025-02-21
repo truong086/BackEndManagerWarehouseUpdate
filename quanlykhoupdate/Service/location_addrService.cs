@@ -59,6 +59,7 @@ namespace quanlykhoupdate.Service
                         area = item.area,
                         line = item.line,
                         shelf = item.shelf,
+                        quantity = checkProduct_location.quantity,
                         history = loadDataHistory(checkProduct_location.products)
                     });
                 }
@@ -251,7 +252,8 @@ namespace quanlykhoupdate.Service
                 productbyShelves.Add(new productbyShelf
                 {
                     location = item.location.code_location_addr,
-                    title = item.product.title
+                    title = item.product.title,
+                    quantity = item.quantity
                 });
             }
 
@@ -290,7 +292,8 @@ namespace quanlykhoupdate.Service
                 var checIdLocaation = _context.product_location.Include(p => p.products).Include(l => l.location_Addrs).Where(x => x.location_addr_id == item).Select(x => new
                 {
                     product = x.products,
-                    location = x.location_Addrs
+                    location = x.location_Addrs,
+                    quantity = x.quantity
                 }).ToList();
 
                 loadData(checIdLocaation);

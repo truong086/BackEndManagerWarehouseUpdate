@@ -9,6 +9,7 @@ namespace quanlykhoupdate.ViewModel
         public string? area { get; set; }
         public string? line { get; set; }
         public string? shelf { get; set; }
+        public int? quantity { get; set; }
         public List<object>? history { get; set; }
     }
 
@@ -37,6 +38,7 @@ namespace quanlykhoupdate.ViewModel
     {
         public string? location { get; set;}
         public string? title { get; set;}
+        public int? quantity { get; set;}
     }
 
     public class listProductByLocationData

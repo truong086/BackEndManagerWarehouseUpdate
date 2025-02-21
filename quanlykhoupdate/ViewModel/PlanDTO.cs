@@ -24,10 +24,19 @@
         public string? lineNew { get; set; }
         public string? shelfNew { get; set; }
         public int? status { get; set; }
+        public DateTimeOffset? updateat { get; set; }
     }
 
     public class searchDatetimePlan
     {
+        public DateTimeOffset? datefrom { get; set; }
+        public DateTimeOffset? dateto { get; set; }
+    }
+
+    public class searchDataPost
+    {
+        public int page { get; set; } = 1;
+        public int pageSize { get; set; } = 20;
         public DateTimeOffset? datefrom { get; set; }
         public DateTimeOffset? dateto { get; set; }
     }

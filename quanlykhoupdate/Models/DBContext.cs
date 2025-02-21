@@ -18,6 +18,7 @@ namespace quanlykhoupdate.Models
         public DbSet<outbound> outbound { get; set; }
         public DbSet<outbound_product> outbound_product { get; set; }
         public DbSet<supplier> supplier { get; set; }
+        public DbSet<update_history> update_history { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -75,6 +76,19 @@ namespace quanlykhoupdate.Models
                 .WithMany()
                 .HasForeignKey(m => m.location_addr_id_old)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<update_history>()
+                .HasOne(uh => uh.products)
+                .WithMany(p => p.update_Histories) 
+                .HasForeignKey(uh => uh.product_id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<update_history>()
+                .HasOne(uh => uh.location_Addrs)
+                .WithMany(l => l.Update_Histories) 
+                .HasForeignKey(uh => uh.location_addr_id)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }
