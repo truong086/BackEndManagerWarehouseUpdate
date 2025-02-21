@@ -4,12 +4,14 @@ using OfficeOpenXml;
 using quanlykhoupdate.common;
 using quanlykhoupdate.Models;
 using quanlykhoupdate.ViewModel;
+using System.Collections.Generic;
 
 namespace quanlykhoupdate.Service
 {
     public class location_addrService : Ilocation_addrService
     {
         private readonly DBContext _context;
+        private List<productbyShelf> productbyShelves;
         public location_addrService(DBContext context)
         {
             _context = context;
@@ -163,6 +165,178 @@ namespace quanlykhoupdate.Service
 
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
                 return package.GetAsByteArray();
+            }
+        }
+
+        public async Task<PayLoad<object>> FindAllData()
+        {
+            try
+            {
+                var dataArea = _context.location_addr.GroupBy(x => x.area).Select(x => x.Key).ToList();
+
+                return await Task.FromResult(PayLoad<object>.Successfully(dataArea));
+            }catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> FindAllDataLine(string area)
+        {
+            try
+            {
+                var dataArea = _context.location_addr.Where(x => x.area == area).GroupBy(x => x.line).Select(x => x.Key).ToList();
+
+                return await Task.FromResult(PayLoad<object>.Successfully(dataArea));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> FindAllDataShelf(string line, string area)
+        {
+            try
+            {
+                var dataArea = _context.location_addr.Where(x => x.line == line && x.area == area).GroupBy(x => new
+                {
+                    shelf = x.shelf,
+                    area = x.area,
+                    line = x.line
+                }).Select(x => new dataMapShelf
+                {
+                    shelf = x.Key.shelf,
+                    area = x.Key.area,
+                    line = x.Key.line
+                }).ToList();
+
+                return await Task.FromResult(PayLoad<object>.Successfully(loadDataLocationShelf(dataArea)));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        private List<dataShelByLine> loadDataLocationShelf(List<dataMapShelf> data)
+        {
+            var list = new List<dataShelByLine>();
+
+            foreach (var item in data)
+            {
+                var checkLocation = _context.location_addr.Where(x => x.shelf == item.shelf && x.area == item.area && x.line == item.line).Select(x => new
+                {
+                    code = x.code_location_addr,
+                    id = x.id
+                }).ToList();
+
+                list.Add(new dataShelByLine
+                {
+                    shelf = item.shelf,
+                    location = checkLocation.Select(x => x.code).ToList(),
+                    productbyShelf = dataLoadByShelf(checkLocation.Select(x => x.id).ToList())
+                });
+            }
+
+            return list;
+        }
+
+        private List<productbyShelf> loadData(IEnumerable<dynamic> data)
+        {
+            
+
+            foreach (var item in data)
+            {
+                productbyShelves.Add(new productbyShelf
+                {
+                    location = item.location.code_location_addr,
+                    title = item.product.title
+                });
+            }
+
+            return productbyShelves;
+        }
+
+        public async Task<PayLoad<object>> FindAllDataLocation(string line, string area, string shelf)
+        {
+            try
+            {
+                var checkLocation = _context.location_addr.Where(x => x.area == area && x.line == line && x.shelf == shelf).Select(x => new
+                {
+                    id = x.id,
+                    location = x.code_location_addr
+                }).ToList();
+
+                return await Task.FromResult(PayLoad<object>.Successfully(new dataShelByLine
+                {
+                    location = checkLocation.Select(x => x.location).ToList(),
+                    productbyShelf = dataLoadByShelf(checkLocation.Select(x => x.id).ToList())
+                }));
+
+            }
+            catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        private List<productbyShelf> dataLoadByShelf(List<int> id)
+        {
+            productbyShelves = new List<productbyShelf>();
+
+            foreach (var item in id)
+            {
+                var checIdLocaation = _context.product_location.Include(p => p.products).Include(l => l.location_Addrs).Where(x => x.location_addr_id == item).Select(x => new
+                {
+                    product = x.products,
+                    location = x.location_Addrs
+                }).ToList();
+
+                loadData(checIdLocaation);
+                
+            }
+
+            return productbyShelves;
+        }
+        private List<listProductByLocationData> dataProductByShefl(List<int> id)
+        {
+            var list = new List<listProductByLocationData>();
+
+            foreach (var item in id)
+            {
+                var checIdLocaation = _context.product_location.Include(p => p.products).Include(l => l.location_Addrs).Where(x => x.location_addr_id == item).Select(x => new
+                {
+                    product = x.products,
+                    location = x.location_Addrs
+                }).ToList();
+
+                list.Add(new listProductByLocationData
+                {
+                    productbyShelf = loadData(checIdLocaation)
+                });
+            }
+
+            return list;
+        }
+
+        public async Task<PayLoad<object>> FindAllDataShelfOne(string line, string area)
+        {
+            try
+            {
+                var dataArea = _context.location_addr.Where(x => x.line == line && x.area == area).GroupBy(x => new
+                {
+                    shelf = x.shelf
+                }).Select(x => new
+                {
+                    shelf = x.Key.shelf
+                }).ToList();
+
+                return await Task.FromResult(PayLoad<object>.Successfully(dataArea));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
             }
         }
     }

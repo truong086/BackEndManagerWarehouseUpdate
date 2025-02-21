@@ -35,5 +35,19 @@ namespace quanlykhoupdate.Controllers
         {
             return await _productService.findOneCode(name);
         }
+
+        [HttpGet]
+        [Route(nameof(AddDataSupplier))]
+        public async Task<PayLoad<string>> AddDataSupplier()
+        {
+            return await _productService.AddDataSupplier();
+        }
+
+        [HttpPost]
+        [Route(nameof(ImportDataExcel))]
+        public async Task<PayLoad<object>> ImportDataExcel(IFormFile file)
+        {
+            return await _productService.ImportDataExcel(file);
+        }
     }
 }

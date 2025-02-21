@@ -335,5 +335,42 @@ namespace quanlykhoupdate.Service
                 return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(ex.Message));
             }
         }
+
+        public async Task<PayLoad<object>> FindAllDataByDone(searchDatetimePlan dataTime, int page = 1, int pageSize = 20)
+        {
+            try
+            {
+                var data = _context.plan.Where(x => x.status == 1 && x.time >= dataTime.datefrom && x.time <= dataTime.dateto).OrderByDescending(x => x.id).ToList();
+
+                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> FindByDataAreaLineShelf(SearchAreaLineShelf data)
+        {
+            try
+            {
+                var checkData = _context.location_addr.Where(x => x.area == data.area && x.line == data.line && x.shelf == data.shelf).Select(x => x.code_location_addr).ToList();
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = checkData
+                }));
+            }catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
     }
 }

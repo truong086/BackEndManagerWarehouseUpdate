@@ -24,6 +24,41 @@ namespace quanlykhoupdate.Controllers
         }
 
         [HttpGet]
+        [Route(nameof(FindAllData))]
+        public async Task<PayLoad<object>> FindAllData()
+        {
+            return await _location_addrService.FindAllData();
+        }
+
+        [HttpGet]
+        [Route(nameof(FindAllDataLine))]
+        public async Task<PayLoad<object>> FindAllDataLine(string area)
+        {
+            return await _location_addrService.FindAllDataLine(area);
+        }
+
+        [HttpGet]
+        [Route(nameof(FindAllDataShelf))]
+        public async Task<PayLoad<object>> FindAllDataShelf(string line, string area)
+        {
+            return await _location_addrService.FindAllDataShelf(line, area);
+        }
+
+        [HttpGet]
+        [Route(nameof(FindAllDataLocation))]
+        public async Task<PayLoad<object>> FindAllDataLocation(string line, string area, string shelf)
+        {
+            return await _location_addrService.FindAllDataLocation(line, area, shelf);
+        }
+
+        [HttpGet]
+        [Route(nameof(FindAllDataShelfOne))]
+        public async Task<PayLoad<object>> FindAllDataShelfOne(string line, string area)
+        {
+            return await _location_addrService.FindAllDataShelfOne(line, area);
+        }
+
+        [HttpGet]
         [Route(nameof(dowloadexcel))]
         public IActionResult dowloadexcel(string code)
         {

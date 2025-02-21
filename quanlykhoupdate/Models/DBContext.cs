@@ -17,6 +17,7 @@ namespace quanlykhoupdate.Models
         public DbSet<inbound_product> inbound_product { get; set; }
         public DbSet<outbound> outbound { get; set; }
         public DbSet<outbound_product> outbound_product { get; set; }
+        public DbSet<supplier> supplier { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,6 +26,12 @@ namespace quanlykhoupdate.Models
                 .HasMany(c => c.inbound_Products)
                 .WithOne(p => p.inbounds)
                 .HasForeignKey(p => p.inbound_id)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<supplier>()
+                .HasMany(c => c.products)
+                .WithOne(p => p.suppliers)
+                .HasForeignKey(p => p.warehouseID)
                  .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<outbound>()

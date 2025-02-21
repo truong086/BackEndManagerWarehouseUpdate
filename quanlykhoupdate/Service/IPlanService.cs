@@ -12,7 +12,9 @@ namespace quanlykhoupdate.Service
         Task<PayLoad<object>> FindAll(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindOne(int id);
         Task<PayLoad<object>> FindAllDone(int page = 1, int pageSize = 20);
+        Task<PayLoad<object>> FindAllDataByDone(searchDatetimePlan dataTime, int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindAllNoDone(int page = 1, int pageSize = 20);
+        Task<PayLoad<object>> FindByDataAreaLineShelf(SearchAreaLineShelf data);
         byte[] FindAllDownLoadExcel(searchDatetimePlan data);
 
     }

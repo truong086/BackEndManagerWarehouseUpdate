@@ -15,6 +15,7 @@
     {
         public int Id { get; set; }
         public string? title { get; set; }
+        public string? nameSupplier { get; set; }
         public List<dataLocation>? dataLocations { get; set; }
         public List<object>? history { get; set; }
     }

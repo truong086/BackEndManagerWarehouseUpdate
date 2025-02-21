@@ -1,7 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using quanlykhoupdate.common;
 using quanlykhoupdate.Models;
 using quanlykhoupdate.ViewModel;
+using System.Drawing.Printing;
+using System.Xml.Linq;
 
 namespace quanlykhoupdate.Service
 {
@@ -42,15 +45,30 @@ namespace quanlykhoupdate.Service
             }
         }
 
-        public async Task<PayLoad<object>> findOne(string? name)
+        public async Task<PayLoad<object>> findOne(string? name, int page = 1, int pageSize = 20)
         {
             try
             {
-                var checkData = _context.product.FirstOrDefault(x => x.title == name);
+                var list = new List<dataProductLocation>();
+
+                var checkData = _context.product.Where(x => x.title == name).ToList();
                 if(checkData == null)
                     return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
 
-                return await Task.FromResult(PayLoad<object>.Successfully(loadDataFindOne(checkData)));
+                foreach(var item in checkData)
+                {
+                    list.Add(loadDataFindOne(item));
+                }
+
+                var pageList = new PageList<object>(list, page - 1, pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
             }
             catch(Exception ex)
             {
@@ -62,6 +80,7 @@ namespace quanlykhoupdate.Service
         {
             try
             {
+
                 var checkDataCode = _context.location_addr.FirstOrDefault(x => x.code_location_addr == name);
 
                 if(checkDataCode == null)
@@ -94,6 +113,7 @@ namespace quanlykhoupdate.Service
         private dataProductLocation loadDataFindOne(product data)
         {
             var checkData = _context.product.Where(x => x.id == data.id)
+                 .Include(x => x.suppliers)
                 .Include(pl => pl.product_Locations)
                 .ThenInclude(l => l.location_Addrs)
                 .AsNoTracking()
@@ -101,6 +121,7 @@ namespace quanlykhoupdate.Service
                 {
                     Id = x.id,
                     title = x.title,
+                    nameSupplier = x.suppliers.title,
                     dataLocations = x.product_Locations.Select(lc => new dataLocation
                     {
                         code = lc.location_Addrs.code_location_addr,
@@ -177,7 +198,7 @@ namespace quanlykhoupdate.Service
                                 location_new  = x.location_addr_id_new,
                                 locationOld = x.location_Addr_Old,
                                 status = x.status,
-                        }).FirstOrDefault(x => x.location_new == isCheckLocationOld && x.status == 1 && !listCheckInt.Contains(x.id));
+                        }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_new == isCheckLocationOld && x.status == 1 && !listCheckInt.Contains(x.id));
 
                         if(checkLocationOld != null)
                         {
@@ -196,6 +217,161 @@ namespace quanlykhoupdate.Service
                 }
             }
             return list;
+        }
+
+        public async Task<PayLoad<string>> AddDataSupplier()
+        {
+            try
+            {
+                int idSupplier = 1;
+                for(var i = 1; i <= 28381; i++)
+                {
+                    if(idSupplier > 8)
+                        idSupplier = 1;
+
+                    var checkData = _context.product.FirstOrDefault(x => x.id == i);
+                    if(checkData != null)
+                    {
+                        var checkSupplier = _context.supplier.FirstOrDefault(x => x.id == idSupplier);
+                        if(checkSupplier != null)
+                        {
+                            checkData.suppliers = checkSupplier;
+                            checkData.warehouseID = checkSupplier.id;
+
+                            _context.product.Update(checkData);
+                            _context.SaveChanges();
+                        }
+
+                        idSupplier++;
+                    }
+                }
+                return await Task.FromResult(PayLoad<string>.Successfully(Status.SUCCESS));
+            }
+            catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<string>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> ImportDataExcel(IFormFile file)
+        {
+            try
+            {
+                var columNames = new List<string>();
+                var columName = "ptNo";
+                var columNameWsNo = "warehouseID";
+                var result = new List<Dictionary<string, object>>();
+
+
+                using (var stream = new MemoryStream())
+                {
+                    await file.CopyToAsync(stream);
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Lấy sheet đầu tiên
+                        int rowCount = worksheet.Dimension.Rows; // Tổng số dòng
+                        int colCount = worksheet.Dimension.Columns; // Tổng số cột
+
+                        // Tìm vị trí cột cần lấy
+                        int targetColumnIndex = -1;
+                        int targetColumnIndexWsNo = -1;
+                        for (int col = 1; col <= colCount; col++)
+                        {
+                            if (worksheet.Cells[1, col].Text.Trim().Equals(columName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                targetColumnIndex = col;
+
+                            }
+
+                            if (worksheet.Cells[1, col].Text.Trim().Equals(columNameWsNo, StringComparison.OrdinalIgnoreCase))
+                            {
+                                targetColumnIndexWsNo = col;
+                            }
+
+                            if (targetColumnIndex != -1 && targetColumnIndexWsNo != -1)
+                                break;
+                        }
+
+                        //if (targetColumnIndex == -1)
+                        //    return BadRequest($"Không tìm thấy cột '{columName}' trong file Excel.");
+
+                        // Lặp qua từng dòng để lấy dữ liệu trong cột cần tìm
+                        for (int row = 2; row <= rowCount; row++) // Bỏ qua dòng tiêu đề
+                        {
+
+                            if (targetColumnIndexWsNo != -1 || targetColumnIndex != -1)
+                            {
+                                string oldValueWsNo = worksheet.Cells[row, targetColumnIndexWsNo].Text;
+                                string oldValue = worksheet.Cells[row, targetColumnIndex].Text;
+
+                                var checkDataSupplier = _context.supplier.FirstOrDefault(x => x.title == oldValueWsNo);
+                                var checkProduct = _context.product.FirstOrDefault(x => x.title == oldValue);
+
+                                if(checkDataSupplier != null && checkProduct != null)
+                                {
+                                    checkProduct.warehouseID = checkDataSupplier.id;
+                                    checkProduct.suppliers = checkDataSupplier;
+
+                                    _context.product.Update(checkProduct);
+                                    _context.SaveChanges();
+                                }
+                            }
+                        }
+                    }
+                }
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = Status.SUCCESS
+                }));
+
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> findBySuppliers(int id, int page = 1, int pageSize = 20)
+        {
+            try
+            {
+                var list = new List<dataProductLocation>();
+
+                var checkData = _context.product.Where(x => x.warehouseID == id).ToList();
+                if (checkData == null)
+                    return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
+
+                foreach (var item in checkData)
+                {
+                    list.Add(loadDataFindOne(item));
+                }
+
+                var pageList = new PageList<object>(list, page - 1, pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> findOneByOutAndIn(int id)
+        {
+            try
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
+            }
+            catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
         }
     }
 }
