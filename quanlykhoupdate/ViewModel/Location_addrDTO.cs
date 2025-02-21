@@ -4,6 +4,7 @@ namespace quanlykhoupdate.ViewModel
 {
     public class Location_addrDTO
     {
+        public int? id { get; set; }
         public string? code { get; set; }
         public string? title { get; set; }  
         public string? area { get; set; }

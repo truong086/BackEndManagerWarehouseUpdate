@@ -213,12 +213,13 @@ namespace quanlykhoupdate.Service
                         }
                         else
                         {
+                            list.Add(checkLocation);
                             isCheck = false;
                         }
 
                         checkWhile++;
                     }
-                    list.Add(checkLocation);
+                    
                 }
             }
             return list;

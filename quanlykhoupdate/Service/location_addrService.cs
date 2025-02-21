@@ -54,6 +54,7 @@ namespace quanlykhoupdate.Service
                 {
                     list.Add(new Location_addrDTO
                     {
+                        id = checkProduct_location.products.id,
                         code = item.code_location_addr,
                         title = checkProduct_location.products.title,
                         area = item.area,
