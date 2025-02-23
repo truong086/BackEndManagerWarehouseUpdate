@@ -49,22 +49,48 @@ namespace quanlykhoupdate.Service
 
             foreach (var item in data)
             {
-                var checkProduct_location = _context.product_location.Include(p => p.products).FirstOrDefault(x => x.location_addr_id == item.id);
+                var checkProduct_location = _context.product_location.Include(p => p.products).ThenInclude(s => s.suppliers).FirstOrDefault(x => x.location_addr_id == item.id);
                 if(checkProduct_location != null)
                 {
                     list.Add(new Location_addrDTO
                     {
-                        id = checkProduct_location.products.id,
+                        id = checkProduct_location.products == null ? 0 : checkProduct_location.products.id,
                         code = item.code_location_addr,
-                        title = checkProduct_location.products.title,
+                        title = checkProduct_location.products == null ? Status.DATANULL : checkProduct_location.products.title,
                         area = item.area,
                         line = item.line,
                         shelf = item.shelf,
                         quantity = checkProduct_location.quantity,
-                        history = loadDataHistory(checkProduct_location.products)
+                        supplier = checkProduct_location.products == null || checkProduct_location.products.suppliers == null ? Status.DATANULL : checkProduct_location.products.suppliers.title,
+                        history = loadDataHistory(checkProduct_location.products == null ? new product() : checkProduct_location.products),
+                        InOutByProducts = loadDataInOut(checkProduct_location.products == null ? 0 : checkProduct_location.products.id)
                     });
                 }
             }
+
+            return list;
+        }
+
+        private List<InOutByProduct> loadDataInOut(int id)
+        {
+            var list = new List<InOutByProduct>();
+
+            if(id != 0)
+            {
+                var checkUpdateHistory = _context.update_history.Include(p => p.products).Include(l => l.location_Addrs).Where(x => x.product_id == id).ToList();
+
+                foreach (var product in checkUpdateHistory)
+                {
+                    list.Add(new InOutByProduct
+                    {
+                        location = product != null && product.location_Addrs != null ? product.location_Addrs.code_location_addr : Status.DATANULL,
+                        updateat = product.last_modify_date,
+                        quantity = product.quantity,
+                        status = product.status
+                    });
+                }
+            }
+            
 
             return list;
         }
@@ -142,9 +168,15 @@ namespace quanlykhoupdate.Service
                 worksheet.Cells[1, 3].Value = "Line";
                 worksheet.Cells[1, 4].Value = "Shelf";
                 worksheet.Cells[1, 5].Value = "Code";
+                worksheet.Cells[1, 6].Value = "Warehouse ID";
+                worksheet.Cells[1, 7].Value = "Quantity";
+                worksheet.Cells[1, 8].Value = "Status";
+                worksheet.Cells[1, 9].Value = "Quantity";
+                worksheet.Cells[1, 10].Value = "Location";
+                worksheet.Cells[1, 11].Value = "Date";
 
                 // Định dạng tiêu đề
-                using (var range = worksheet.Cells[1, 1, 1, 5])
+                using (var range = worksheet.Cells[1, 1, 1, 11])
                 {
                     range.Style.Font.Bold = true; // Chữ in đậm
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
@@ -161,8 +193,27 @@ namespace quanlykhoupdate.Service
                     worksheet.Cells[row, 3].Value = product.line;
                     worksheet.Cells[row, 4].Value = product.shelf;
                     worksheet.Cells[row, 5].Value = product.code;
+                    worksheet.Cells[row, 6].Value = product.supplier;
+                    worksheet.Cells[row, 7].Value = product.quantity;
 
-                    row++;
+                    if (product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
+                    {
+                        foreach (var product2 in product.InOutByProducts)
+                        {
+                            worksheet.Cells[row, 8].Value = product2.status == 1 ? "Import" : "Deliverynote";
+                            worksheet.Cells[row, 9].Value = product2.quantity;
+                            worksheet.Cells[row, 10].Value = product2.location;
+                            worksheet.Cells[row, 11].Value = product2.updateat;
+
+                            row++;
+
+                        }
+                    }
+                    else
+                    {
+                        worksheet.Cells[row, 7].Value = product.supplier;
+                        row++;
+                    }
                 }
 
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
@@ -274,7 +325,8 @@ namespace quanlykhoupdate.Service
                 return await Task.FromResult(PayLoad<object>.Successfully(new dataShelByLine
                 {
                     location = checkLocation.Select(x => x.location).ToList(),
-                    productbyShelf = dataLoadByShelf(checkLocation.Select(x => x.id).ToList())
+                    productbyShelf = dataLoadByShelf(checkLocation.Select(x => x.id).ToList()),
+                    FindAllPlanDatas = dataPlan(checkLocation.Select(x => x.id).ToList())
                 }));
 
             }
@@ -282,6 +334,42 @@ namespace quanlykhoupdate.Service
             {
                 return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
             }
+        }
+
+        private List<FindAllPlanData> dataPlan(List<int> id)
+        {
+            var list = new List<FindAllPlanData>();
+
+            foreach (var idItem in id)
+            {
+                var checkPlan = _context.plan.Where(x => (x.location_addr_id_old == idItem || x.location_addr_id_new == idItem) && x.status != 1).ToList();
+                if(checkPlan != null && checkPlan.Count > 0)
+                {
+                    foreach (var itemPlan in checkPlan)
+                    {
+                        var checkLocationOld = _context.location_addr.FirstOrDefault(x => x.id == itemPlan.location_addr_id_old);
+                        var checkLocationNew = _context.location_addr.FirstOrDefault(x => x.id == itemPlan.location_addr_id_new);
+
+                        list.Add(new FindAllPlanData
+                        {
+                            id = itemPlan.id,
+                            locationNew = checkLocationNew == null ? Status.DATANULL : checkLocationNew.code_location_addr,
+                            areaNew = checkLocationNew == null ? Status.DATANULL : checkLocationNew.area,
+                            lineNew = checkLocationNew == null ? Status.DATANULL : checkLocationNew.line,
+                            shelfNew = checkLocationNew == null ? Status.DATANULL : checkLocationNew.shelf,
+                            status = itemPlan == null ? null : itemPlan.status,
+                            areaOld = checkLocationOld == null ? Status.DATANULL : checkLocationOld.area,
+                            lineOld = checkLocationOld == null ? Status.DATANULL : checkLocationOld.line,
+                            shelfOld = checkLocationOld == null ? Status.DATANULL : checkLocationOld.shelf,
+                            locationOld = checkLocationOld == null ? Status.DATANULL : checkLocationOld.code_location_addr,
+                            updateat = itemPlan.time
+                        });
+                    }
+                }
+
+            }
+
+            return list;
         }
 
         private List<productbyShelf> dataLoadByShelf(List<int> id)

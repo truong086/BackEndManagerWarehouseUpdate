@@ -302,7 +302,7 @@ namespace quanlykhoupdate.Service
                         //    return BadRequest($"Không tìm thấy cột '{columName}' trong file Excel.");
 
                         // Lặp qua từng dòng để lấy dữ liệu trong cột cần tìm
-                        for (int row = 2; row <= rowCount; row++) // Bỏ qua dòng tiêu đề
+                        for (int row = 10000; row <= rowCount; row++) // Bỏ qua dòng tiêu đề
                         {
 
                             if (targetColumnIndexWsNo != -1 || targetColumnIndex != -1)
@@ -310,17 +310,62 @@ namespace quanlykhoupdate.Service
                                 string oldValueWsNo = worksheet.Cells[row, targetColumnIndexWsNo].Text;
                                 string oldValue = worksheet.Cells[row, targetColumnIndex].Text;
 
-                                var checkDataSupplier = _context.supplier.FirstOrDefault(x => x.title == oldValueWsNo);
-                                var checkProduct = _context.product.FirstOrDefault(x => x.title == oldValue);
+                                //var updateData = oldValue.TrimStart('0');
+                                //updateData = string.IsNullOrEmpty(updateData) ? "0" : updateData;
 
-                                if(checkDataSupplier != null && checkProduct != null)
+                                var checkProduct = _context.product.FirstOrDefault(x => x.title == oldValue && x.warehouseID == null && x.suppliers == null);
+                                if(checkProduct != null)
                                 {
-                                    checkProduct.warehouseID = checkDataSupplier.id;
-                                    checkProduct.suppliers = checkDataSupplier;
+                                    var checkDataSupplier = _context.supplier.FirstOrDefault(x => x.title == oldValueWsNo);
 
-                                    _context.product.Update(checkProduct);
-                                    _context.SaveChanges();
+                                    if (checkDataSupplier != null && checkProduct != null)
+                                    {
+                                        checkProduct.warehouseID = checkDataSupplier.id;
+                                        checkProduct.suppliers = checkDataSupplier;
+
+                                        _context.product.Update(checkProduct);
+                                        _context.SaveChanges();
+                                    }
                                 }
+                                else if(checkProduct == null)
+                                {
+                                    var checkProductUpdate = _context.product.FirstOrDefault(x => x.title == "00" + oldValue && x.warehouseID == null && x.suppliers == null);
+
+                                    if (checkProductUpdate != null)
+                                    {
+                                        var checkDataSupplier = _context.supplier.FirstOrDefault(x => x.title == oldValueWsNo);
+
+                                        if (checkDataSupplier != null && checkProductUpdate != null)
+                                        {
+                                            checkProductUpdate.warehouseID = checkDataSupplier.id;
+                                            checkProductUpdate.suppliers = checkDataSupplier;
+
+                                            _context.product.Update(checkProductUpdate);
+                                            _context.SaveChanges();
+                                        }
+                                    }
+
+                                    else
+                                    {
+                                        var checkProductUpdateData = _context.product.FirstOrDefault(x => x.title == "0" + oldValue && x.warehouseID == null && x.suppliers == null);
+
+                                        if (checkProductUpdateData != null)
+                                        {
+                                            var checkDataSupplier = _context.supplier.FirstOrDefault(x => x.title == oldValueWsNo);
+
+                                            if (checkDataSupplier != null && checkProductUpdateData != null)
+                                            {
+                                                checkProductUpdateData.warehouseID = checkDataSupplier.id;
+                                                checkProductUpdateData.suppliers = checkDataSupplier;
+
+                                                _context.product.Update(checkProductUpdateData);
+                                                _context.SaveChanges();
+                                            }
+                                        }
+                                    }
+                                }
+
+
                             }
                         }
                     }
@@ -401,7 +446,7 @@ namespace quanlykhoupdate.Service
                 title = data.title,
                 quantity = _context.product_location.Where(x => x.product_id == data.id).Sum(x => x.quantity),
                 InOutByProducts = loadDataInOut(data.id),
-                supplier = data.suppliers.title,
+                supplier = data.suppliers == null ? Status.DATANULL : data.suppliers.title,
                 history = loadDataHistory(data)
             };
         }
@@ -511,19 +556,27 @@ namespace quanlykhoupdate.Service
                 {
                     worksheet.Cells[row, 1].Value = product.title;
                     worksheet.Cells[row, 2].Value = product.quantity;
-                    
-                    foreach ( var product2 in product.InOutByProducts)
-                    {
-                        worksheet.Cells[rowItem, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
-                        worksheet.Cells[rowItem, 4].Value = product2.location;
-                        worksheet.Cells[rowItem, 5].Value = product2.updateat;
-                        worksheet.Cells[rowItem, 6].Value = product2.quantity;
 
-                        rowItem++;
+                    if (product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
+                    {
+                        worksheet.Cells[row, 7].Value = product.supplier;
+
+                        foreach (var product2 in product.InOutByProducts)
+                        {
+                            worksheet.Cells[row, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
+                            worksheet.Cells[row, 4].Value = product2.location;
+                            worksheet.Cells[row, 5].Value = product2.updateat;
+                            worksheet.Cells[row, 6].Value = product2.quantity;
+
+                            row++;
+
+                        }
                     }
-                    worksheet.Cells[row, 7].Value = product.supplier;
-                    row += rowItem;
-                    rowItem += row;
+                    else
+                    {
+                        worksheet.Cells[row, 7].Value = product.supplier;
+                        row++;
+                    }
                 }
 
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
@@ -572,17 +625,27 @@ namespace quanlykhoupdate.Service
                 {
                     worksheet.Cells[row, 1].Value = product.title;
                     worksheet.Cells[row, 2].Value = product.quantity;
-                    foreach (var product2 in product.InOutByProducts)
+                    if(product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
                     {
-                        worksheet.Cells[rowItem, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
-                        worksheet.Cells[rowItem, 4].Value = product2.location;
-                        worksheet.Cells[rowItem, 5].Value = product2.updateat;
-                        worksheet.Cells[rowItem, 6].Value = product2.quantity;
+                        worksheet.Cells[row, 7].Value = product.supplier;
 
-                        rowItem++;
+                        foreach (var product2 in product.InOutByProducts)
+                        {
+                            worksheet.Cells[row, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
+                            worksheet.Cells[row, 4].Value = product2.location;
+                            worksheet.Cells[row, 5].Value = product2.updateat;
+                            worksheet.Cells[row, 6].Value = product2.quantity;
+
+                            row++;
+
+                        }
                     }
-                    worksheet.Cells[row, 7].Value = product.supplier;
-                    row += rowItem;
+                    else
+                    {
+                        worksheet.Cells[row, 7].Value = product.supplier;
+                        row++;
+                    }
+                    
                 }
 
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột

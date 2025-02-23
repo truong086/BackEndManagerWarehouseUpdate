@@ -10,8 +10,10 @@ namespace quanlykhoupdate.ViewModel
         public string? area { get; set; }
         public string? line { get; set; }
         public string? shelf { get; set; }
+        public string? supplier { get; set; }
         public int? quantity { get; set; }
         public List<object>? history { get; set; }
+        public List<InOutByProduct>? InOutByProducts { get; set; }
     }
 
     public class Location_addrGetAll
@@ -33,6 +35,7 @@ namespace quanlykhoupdate.ViewModel
         public List<string>? location { get; set; }
         public List<productbyShelf>? productbyShelf { get; set; }
         public List<listProductByLocationData>? listProductByLocationDatas { get; set; }
+        public List<FindAllPlanData>? FindAllPlanDatas { get; set; }
     }
 
     public class productbyShelf
