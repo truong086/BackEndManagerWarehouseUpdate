@@ -4,6 +4,12 @@
     {
         public string?location_new { get; set; }
         public string? location_old { get; set; }
+        public string? areaOld { get; set; }
+        public string? lineOld { get; set; }
+        public string? shelfOld { get; set; }
+        public string? areaNew { get; set; }
+        public string? lineNew { get; set; }
+        public string? shelfNew { get; set; }
     }
 
     public class UpdatePlan

@@ -22,16 +22,19 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var checkLocationOld = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_old);
-                var checkLocationNew = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_new);
+                //var checkLocationOld = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_old);
+                //var checkLocationNew = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_new);
 
-                if(checkLocationOld == null ||  checkLocationNew == null)
+                var checkLocationOld = checkDataLocationExsis(planDTO.areaOld, planDTO.lineOld, planDTO.shelfOld, planDTO.location_old);
+                var checkLocationNew = checkDataLocationExsis(planDTO.areaNew, planDTO.lineNew, planDTO.shelfNew, planDTO.location_new);
+
+                if (checkLocationOld == null ||  checkLocationNew == null)
                     return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
 
                 var checkLocationCodeOld = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationOld.id);
                 var checkLocationCodeNew = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationNew.id);
 
-                if (checkLocationOld == null || checkLocationNew == null || checkLocationCodeOld == null || checkLocationCodeNew == null)
+                if (checkLocationOld == null || checkLocationNew == null || checkLocationCodeOld == null)
                     return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
 
                 var checkPlan = _context.plan.Where(x => (x.location_addr_id_old == checkLocationOld.id
@@ -61,7 +64,34 @@ namespace quanlykhoupdate.Service
                 return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(ex.Message));
             }
         }
+        
+        private location_addr checkDataLocationExsis(string area, string line, string shelf, string code)
+        {
+            var dataItem = new location_addr();
 
+            dataItem = _context.location_addr.FirstOrDefault(x => x.area == area && x.line == line && x.shelf == shelf && x.code_location_addr == code);
+            if(dataItem != null)
+            {
+                return dataItem;
+            }
+
+            else
+            {
+                _context.location_addr.Add(new location_addr
+                {
+                    code_location_addr = code,
+                    area = area,
+                    line = line,
+                    shelf = shelf
+                });
+
+                _context.SaveChanges();
+
+                dataItem = _context.location_addr.OrderByDescending(x => x.id).FirstOrDefault();
+
+                return dataItem == null ? null : dataItem;
+            }
+        } 
         public async Task<PayLoad<string>> Delete(int id)
         {
             try
@@ -301,8 +331,8 @@ namespace quanlykhoupdate.Service
                 if(checkPlanId == null)
                     return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
 
-                var checkLocationOld = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_old);
-                var checkLocationNew = _context.location_addr.FirstOrDefault(x => x.code_location_addr == planDTO.location_new);
+                var checkLocationOld = checkDataLocationExsis(planDTO.areaOld, planDTO.lineOld, planDTO.shelfOld, planDTO.location_old);
+                var checkLocationNew = checkDataLocationExsis(planDTO.areaNew, planDTO.lineNew, planDTO.shelfNew, planDTO.location_new);
 
                 if (checkLocationOld == null || checkLocationNew == null)
                     return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
@@ -310,7 +340,7 @@ namespace quanlykhoupdate.Service
                 var checkLocationCodeOld = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationOld.id);
                 var checkLocationCodeNew = _context.product_location.FirstOrDefault(x => x.location_addr_id == checkLocationNew.id);
 
-                if (checkLocationOld == null || checkLocationNew == null || checkLocationCodeOld == null || checkLocationCodeNew == null)
+                if (checkLocationOld == null || checkLocationNew == null || checkLocationCodeOld == null)
                     return await Task.FromResult(PayLoad<PlanDTO>.CreatedFail(Status.DATANULL));
 
                 var checkPlan = _context.plan.Where(x => (x.location_addr_id_old == checkLocationOld.id
