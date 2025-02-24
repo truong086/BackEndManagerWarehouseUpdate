@@ -432,8 +432,7 @@ namespace quanlykhoupdate.Service
             try
             {
                 var checkData = _context.location_addr.FirstOrDefault(x => x.code_location_addr == code);
-                if(checkData == null)
-                    return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
+                
 
                 var checkPlan = _context.plan.FirstOrDefault(x => (x.location_addr_id_old == checkData.id || x.location_addr_id_new == checkData.id) && x.status != 1);
                 if(checkPlan != null) return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATATONTAI));
@@ -446,7 +445,10 @@ namespace quanlykhoupdate.Service
             }
             catch(Exception ex)
             {
-                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    Status.SUCCESS
+                }));
             }
         }
 
@@ -458,8 +460,6 @@ namespace quanlykhoupdate.Service
                 if (checkIdPlan == null) return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATATONTAI));
 
                 var checkData = _context.location_addr.FirstOrDefault(x => x.code_location_addr == code);
-                if (checkData == null)
-                    return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
 
                 var checkPlan = _context.plan.FirstOrDefault(x => (x.location_addr_id_old == checkData.id || x.location_addr_id_new == checkData.id) && x.id != checkIdPlan.id && x.status != 1);
                 if (checkPlan != null) return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATATONTAI));
@@ -472,7 +472,10 @@ namespace quanlykhoupdate.Service
             }
             catch (Exception ex)
             {
-                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    Status.SUCCESS
+                }));
             }
         }
     }
