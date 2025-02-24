@@ -16,6 +16,8 @@ namespace quanlykhoupdate.Service
         Task<PayLoad<object>> FindAllNoDone(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindByDataAreaLineShelf(SearchAreaLineShelf data);
         Task<PayLoad<object>> FindByDataTimeAll(searchDatetimePlan data, int page = 1, int pageSize = 20);
+        Task<PayLoad<object>> checkPlanLocationAdd(string code);
+        Task<PayLoad<object>> checkPlanLocationUpdate(int id, string code);
         byte[] FindAllDownLoadExcel(searchDatetimePlan data);
 
     }

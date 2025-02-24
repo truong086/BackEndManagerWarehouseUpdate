@@ -45,6 +45,20 @@ namespace quanlykhoupdate.Controllers
         }
 
         [HttpGet]
+        [Route(nameof(checkPlanLocationUpdate))]
+        public async Task<PayLoad<object>> checkPlanLocationUpdate(int id, string code)
+        {
+            return await _planService.checkPlanLocationUpdate(id, code);
+        }
+
+        [HttpGet]
+        [Route(nameof(checkPlanLocationAdd))]
+        public async Task<PayLoad<object>> checkPlanLocationAdd(string code)
+        {
+            return await _planService.checkPlanLocationAdd(code);
+        }
+
+        [HttpGet]
         [Route(nameof(FindAllDone))]
         public async Task<PayLoad<object>> FindAllDone(int page = 1, int pageSize = 20)
         {

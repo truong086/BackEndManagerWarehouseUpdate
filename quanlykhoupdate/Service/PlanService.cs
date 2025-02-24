@@ -426,5 +426,54 @@ namespace quanlykhoupdate.Service
                 return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
             }
         }
+
+        public async Task<PayLoad<object>> checkPlanLocationAdd(string code)
+        {
+            try
+            {
+                var checkData = _context.location_addr.FirstOrDefault(x => x.code_location_addr == code);
+                if(checkData == null)
+                    return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
+
+                var checkPlan = _context.plan.FirstOrDefault(x => (x.location_addr_id_old == checkData.id || x.location_addr_id_new == checkData.id) && x.status != 1);
+                if(checkPlan != null) return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATATONTAI));
+
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    Status.SUCCESS
+                }));
+
+            }
+            catch(Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> checkPlanLocationUpdate(int id, string code)
+        {
+            try
+            {
+                var checkIdPlan = _context.plan.FirstOrDefault(x => x.id == id);
+                if (checkIdPlan == null) return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATATONTAI));
+
+                var checkData = _context.location_addr.FirstOrDefault(x => x.code_location_addr == code);
+                if (checkData == null)
+                    return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATANULL));
+
+                var checkPlan = _context.plan.FirstOrDefault(x => (x.location_addr_id_old == checkData.id || x.location_addr_id_new == checkData.id) && x.id != checkIdPlan.id && x.status != 1);
+                if (checkPlan != null) return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATATONTAI));
+
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    Status.SUCCESS
+                }));
+
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
     }
 }
