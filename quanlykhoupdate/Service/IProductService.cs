@@ -14,6 +14,7 @@ namespace quanlykhoupdate.Service
         Task<PayLoad<object>> ImportDataExcel(IFormFile file);
         byte[] FindAllDownLoadExcel(int id);
         byte[] FindAllDownLoadExcelByCodeProduct(string code);
+        byte[] FindAllDownLoadExcelBySupplier(int supplier);
         byte[] FindAllDownLoadExcelByCodeProductList(List<string> code);
     }
 }

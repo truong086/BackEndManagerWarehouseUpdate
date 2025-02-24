@@ -18,6 +18,18 @@ namespace quanlykhoupdate.Service
                 if(!checkProduct(inboundDTO.productListInbounds))
                     return await Task.FromResult(PayLoad<inboundDTO>.CreatedFail(Status.DATANULL));
 
+                var checkDataProduct = inboundDTO.productListInbounds.GroupBy(x => x.product) // Kiểm tra dữ liệu chuyền lên của product có trùng nhau không
+                                        .Where(x => x.Count() > 1)
+                                        .Select(g => new
+                                        {
+                                            product = g.Key,
+                                            count = g.Count()
+                                        }).ToList();
+
+                if (checkDataProduct.Any())
+                {
+                    return await Task.FromResult(PayLoad<inboundDTO>.CreatedFail(Status.DATATONTAI));
+                }
                 _context.outbound.Add(new outbound
                 {
                     is_action = false,

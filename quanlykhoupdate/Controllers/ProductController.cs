@@ -71,6 +71,15 @@ namespace quanlykhoupdate.Controllers
             return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DataExcelPlanProduct.xlsx");
         }
 
+        [HttpPost]
+        [Route(nameof(FindAllDownLoadExcelBySupplier))]
+        public IActionResult FindAllDownLoadExcelBySupplier(int supplier)
+        {
+            byte[] data = _productService.FindAllDownLoadExcelBySupplier(supplier);
+
+            return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DataExcelPlanProduct.xlsx");
+        }
+
         [HttpGet]
         [Route(nameof(findOneCode))]
         public async Task<PayLoad<object>> findOneCode(string? name)

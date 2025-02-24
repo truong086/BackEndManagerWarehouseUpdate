@@ -18,6 +18,7 @@
         public string? nameSupplier { get; set; }
         public List<dataLocation>? dataLocations { get; set; }
         public List<object>? history { get; set; }
+        public List<InOutByProduct>? inOutByProducts { get; set; }
     }
     public class dataLocation
     {

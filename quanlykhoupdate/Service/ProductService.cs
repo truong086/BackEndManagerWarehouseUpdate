@@ -5,6 +5,7 @@ using quanlykhoupdate.common;
 using quanlykhoupdate.Models;
 using quanlykhoupdate.ViewModel;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Printing;
 using System.Xml.Linq;
 
@@ -188,7 +189,61 @@ namespace quanlykhoupdate.Service
                     location_new = x.location_addr_id_new,
                     status = x.status,
                 }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_new == checkLocation.id && x.status == 1);
-                if(checkPlan != null)
+
+                if(checkPlan == null)
+                {
+                    checkPlan = _context.plan.Select(x => new
+                    {
+                        id = x.id,
+                        location_old = x.location_addr_id_old,
+                        location_new = x.location_addr_id_new,
+                        status = x.status,
+                    }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_old == checkLocation.id && x.status == 1);
+
+                    int? isCheckLocationOld = 0;
+                    int checkWhile = 0;
+                    var listCheckInt = new List<int>();
+                    if(checkPlan != null)
+                    {
+                        while (isCheck)
+                        {
+                            if (checkWhile == 0)
+                                isCheckLocationOld = checkPlan.location_new;
+                            var checkLocationOld = _context.plan.Include(x => x.location_Addr_Old).Select(x => new {
+                                id = x.id,
+                                location_old = x.location_addr_id_old,
+                                location_new = x.location_addr_id_new,
+                                locationOld = x.location_Addr_Old,
+                                status = x.status,
+                            }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_old == isCheckLocationOld && x.status == 1 && !listCheckInt.Contains(x.id));
+
+                            if (checkLocationOld != null)
+                            {
+                                list.Add(checkLocationOld.location_new);
+                                isCheckLocationOld = checkLocationOld.location_new;
+                                listCheckInt.Add(checkLocationOld.id);
+                            }
+                            else
+                            {
+                                list.Add(checkLocation);
+                                if (list.Count == 1)
+                                {
+                                    var checkLocationOldData = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_new);
+                                    if (checkLocationOldData != null)
+                                        list.Add(checkLocationOldData);
+                                }
+
+                                isCheck = false;
+                            }
+
+                            checkWhile++;
+                        }
+                    }
+                    
+                }
+                    
+
+                else if (checkPlan != null)
                 {
                     int? isCheckLocationOld = 0;
                     int checkWhile = 0;
@@ -214,6 +269,13 @@ namespace quanlykhoupdate.Service
                         else
                         {
                             list.Add(checkLocation);
+                            if (list.Count == 1)
+                            {
+                                var checkLocationOldData = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_old);
+                                if(checkLocationOldData != null)
+                                    list.Add(checkLocationOldData);
+                            }   
+                            
                             isCheck = false;
                         }
 
@@ -649,6 +711,113 @@ namespace quanlykhoupdate.Service
                 }
 
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+                return package.GetAsByteArray();
+            }
+        }
+
+        public byte[] FindAllDownLoadExcelBySupplier(int supplier)
+        {
+            var checkDataSupplier = _context.product
+        .Where(x => x.warehouseID == supplier)
+        .Include(x => x.suppliers)
+        .Include(pl => pl.product_Locations)
+            .ThenInclude(l => l.location_Addrs)
+        .Include(u => u.update_Histories)
+            .ThenInclude(l => l.location_Addrs)
+        .AsNoTracking()
+        .Select(x => new dataProductLocation
+        {
+            Id = x.id,
+            title = x.title,
+            nameSupplier = x.suppliers.title,
+            dataLocations = x.product_Locations.Select(lc => new dataLocation
+            {
+                code = lc.location_Addrs.code_location_addr,
+                area = lc.location_Addrs.area,
+                line = lc.location_Addrs.line,
+                shelf = lc.location_Addrs.shelf,
+                quantity = lc.quantity
+            }).ToList(),
+            inOutByProducts = x.update_Histories.Select(ud => new InOutByProduct
+            {
+                location = ud.location_Addrs.code_location_addr,
+                quantity = ud.quantity,
+                status = ud.status,
+                updateat = ud.last_modify_date
+            }).ToList()
+        }).ToList();
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Products");
+                worksheet.Cells[1, 1].Value = "Product";
+                worksheet.Cells[1, 2].Value = "Quantity";
+                worksheet.Cells[1, 3].Value = "Status";
+                worksheet.Cells[1, 4].Value = "Location";
+                worksheet.Cells[1, 5].Value = "Date";
+                worksheet.Cells[1, 6].Value = "Location Product";
+                worksheet.Cells[1, 7].Value = "Area";
+                worksheet.Cells[1, 8].Value = "Line";
+                worksheet.Cells[1, 9].Value = "Shelf";
+                worksheet.Cells[1, 10].Value = "Supplier";
+
+                // Định dạng tiêu đề
+                using (var range = worksheet.Cells[1, 1, 1, 10])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                int row = 2; // Bắt đầu từ dòng thứ 2
+
+                foreach (var product in checkDataSupplier)
+                {
+                    int rowStart = row;
+                    int maxRows = Math.Max(product.dataLocations.Count, product.inOutByProducts.Count);
+
+                    for (int i = 0; i < maxRows; i++)
+                    {
+                        if (i == 0)
+                        {
+                            worksheet.Cells[row, 1].Value = product.title;
+                            worksheet.Cells[row, 10].Value = product.nameSupplier;
+                        }
+
+                        // Ghi dữ liệu từ danh sách địa chỉ
+                        if (i < product.dataLocations.Count)
+                        {
+                            var location = product.dataLocations[i];
+                            worksheet.Cells[row, 6].Value = location.code;
+                            worksheet.Cells[row, 7].Value = location.area;
+                            worksheet.Cells[row, 8].Value = location.line;
+                            worksheet.Cells[row, 9].Value = location.shelf;
+                        }
+
+                        // Ghi dữ liệu từ danh sách nhập xuất
+                        if (i < product.inOutByProducts.Count)
+                        {
+                            var history = product.inOutByProducts[i];
+                            worksheet.Cells[row, 2].Value = history.quantity;
+                            worksheet.Cells[row, 3].Value = history.status == 1 ? "Import" : "Deliverynote";
+                            worksheet.Cells[row, 4].Value = history.location;
+                            worksheet.Cells[row, 5].Value = history.updateat;
+                        }
+
+                        row++;
+                    }
+
+                    // Merge cells cho cột Product và Supplier nếu có nhiều dòng
+                    if (maxRows > 1)
+                    {
+                        worksheet.Cells[rowStart, 1, row - 1, 1].Merge = true; // Merge Product
+                        worksheet.Cells[rowStart, 10, row - 1, 10].Merge = true; // Merge Supplier
+                        worksheet.Cells[rowStart, 1, row - 1, 10].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    }
+                }
+
+                worksheet.Cells.AutoFitColumns(); // Tự động căn chỉnh cột
                 return package.GetAsByteArray();
             }
         }
