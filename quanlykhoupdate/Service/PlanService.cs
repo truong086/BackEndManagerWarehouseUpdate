@@ -411,11 +411,13 @@ namespace quanlykhoupdate.Service
             {
                 // Chỉ lấy phần ngày, bỏ qua múi giờ
                 // Chuyển DateTimeOffset? sang DateTime, bỏ múi giờ
-                DateTime dateFrom = datas.datefrom?.UtcDateTime.Date ?? DateTime.UtcNow.Date;
-                DateTime dateTo = datas.dateto?.UtcDateTime.Date.AddHours(1) ?? DateTime.UtcNow.Date.AddHours(1);
+                //DateTime dateFrom = datas.datefrom?.UtcDateTime.Date ?? DateTime.UtcNow.Date;
+                //DateTime dateTo = datas.dateto?.UtcDateTime.Date.AddHours(1) ?? DateTime.UtcNow.Date.AddHours(1);
 
+                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToUniversalTime();
+                DateTimeOffset dateToUtc = datas.dateto.Value.ToUniversalTime().AddHours(1); // Lấy hết ngày
                 var data = await _context.plan
-                    .Where(x => x.time >= dateFrom && x.time <= dateTo && x.status == 1)
+                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status == 1)
                     .OrderByDescending(x => x.id)
                     .ToListAsync();
 
