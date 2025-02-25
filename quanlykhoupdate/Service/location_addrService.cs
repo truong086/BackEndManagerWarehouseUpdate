@@ -170,13 +170,13 @@ namespace quanlykhoupdate.Service
                 worksheet.Cells[1, 5].Value = "Code";
                 worksheet.Cells[1, 6].Value = "Warehouse ID";
                 worksheet.Cells[1, 7].Value = "Quantity";
-                worksheet.Cells[1, 8].Value = "Status";
-                worksheet.Cells[1, 9].Value = "Quantity";
-                worksheet.Cells[1, 10].Value = "Location";
-                worksheet.Cells[1, 11].Value = "Date";
+                //worksheet.Cells[1, 8].Value = "Status";
+                //worksheet.Cells[1, 9].Value = "Quantity";
+                //worksheet.Cells[1, 10].Value = "Location";
+                //worksheet.Cells[1, 11].Value = "Date";
 
                 // Định dạng tiêu đề
-                using (var range = worksheet.Cells[1, 1, 1, 11])
+                using (var range = worksheet.Cells[1, 1, 1, 7])
                 {
                     range.Style.Font.Bold = true; // Chữ in đậm
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
@@ -196,24 +196,26 @@ namespace quanlykhoupdate.Service
                     worksheet.Cells[row, 6].Value = product.supplier;
                     worksheet.Cells[row, 7].Value = product.quantity;
 
-                    if (product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
-                    {
-                        foreach (var product2 in product.InOutByProducts)
-                        {
-                            worksheet.Cells[row, 8].Value = product2.status == 1 ? "Import" : "Deliverynote";
-                            worksheet.Cells[row, 9].Value = product2.quantity;
-                            worksheet.Cells[row, 10].Value = product2.location;
-                            worksheet.Cells[row, 11].Value = product2.updateat;
+                    //if (product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
+                    //{
+                    //    foreach (var product2 in product.InOutByProducts)
+                    //    {
+                    //        worksheet.Cells[row, 8].Value = product2.status == 1 ? "Import" : "Deliverynote";
+                    //        worksheet.Cells[row, 9].Value = product2.quantity;
+                    //        worksheet.Cells[row, 10].Value = product2.location;
+                    //        worksheet.Cells[row, 11].Value = product2.updateat;
 
-                            row++;
+                    //        row++;
 
-                        }
-                    }
-                    else
-                    {
-                        worksheet.Cells[row, 7].Value = product.supplier;
-                        row++;
-                    }
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    worksheet.Cells[row, 7].Value = product.supplier;
+                    //    row++;
+                    //}
+
+                    row++;
                 }
 
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột

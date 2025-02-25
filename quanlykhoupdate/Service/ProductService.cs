@@ -509,10 +509,28 @@ namespace quanlykhoupdate.Service
                 quantity = _context.product_location.Where(x => x.product_id == data.id).Sum(x => x.quantity),
                 InOutByProducts = loadDataInOut(data.id),
                 supplier = data.suppliers == null ? Status.DATANULL : data.suppliers.title,
-                history = loadDataHistory(data)
+                history = loadDataHistory(data),
+                locationProductDatas = loadData(data)
             };
         }
 
+        private List<locationProductData> loadData(product data)
+        {
+            var list = new List<locationProductData>();
+
+            var checkproduct = _context.product_location.Include(x => x.location_Addrs).Where(x => x.product_id == data.id).ToList();
+            foreach (var item in checkproduct)
+            {
+                list.Add(new locationProductData
+                {
+                    area = item.location_Addrs.area,
+                    line = item.location_Addrs.line,
+                    shelf = item.location_Addrs.shelf,
+                    code = item.location_Addrs.code_location_addr,
+                });
+            }
+            return list;
+        }
         private List<InOutByProduct> loadDataInOut(int id)
         {
             var list = new List<InOutByProduct>();
@@ -535,19 +553,37 @@ namespace quanlykhoupdate.Service
 
         public byte[] FindAllDownLoadExcel(int id)
         {
-            var data = _context.product.FirstOrDefault(x => x.id == id);
-
-            var dataMap = loadDataOutIn(data);
+            var checkDataSupplier = _context.product
+        .Where(x => x.id == id)
+        .Include(x => x.suppliers)
+        .Include(pl => pl.product_Locations)
+            .ThenInclude(l => l.location_Addrs)
+        .Include(u => u.update_Histories)
+            .ThenInclude(l => l.location_Addrs)
+        .AsNoTracking()
+        .Select(x => new dataProductLocation
+        {
+            Id = x.id,
+            title = x.title,
+            nameSupplier = x.suppliers.title,
+            dataLocations = x.product_Locations.Select(lc => new dataLocation
+            {
+                code = lc.location_Addrs.code_location_addr,
+                area = lc.location_Addrs.area,
+                line = lc.location_Addrs.line,
+                shelf = lc.location_Addrs.shelf,
+                quantity = lc.quantity
+            }).ToList()
+        }).FirstOrDefault();
             using (var package = new ExcelPackage())
             {
                 var worksheet = package.Workbook.Worksheets.Add("Products");
                 worksheet.Cells[1, 1].Value = "Product";
-                worksheet.Cells[1, 2].Value = "Quantity";
-                worksheet.Cells[1, 3].Value = "Status";
-                worksheet.Cells[1, 4].Value = "Location";
-                worksheet.Cells[1, 5].Value = "Date";
-                worksheet.Cells[1, 6].Value = "Quantity";
-                worksheet.Cells[1, 7].Value = "Warehouse ID";
+                worksheet.Cells[1, 2].Value = "Area";
+                worksheet.Cells[1, 3].Value = "Line";
+                worksheet.Cells[1, 4].Value = "Shelf";
+                worksheet.Cells[1, 5].Value = "Location";
+                worksheet.Cells[1, 6].Value = "Warehouse ID";
 
                 // Định dạng tiêu đề
                 using (var range = worksheet.Cells[1, 1, 1, 6])
@@ -561,20 +597,19 @@ namespace quanlykhoupdate.Service
                 // Đổ dữ liệu vào file Excel
                 int row = 2;
 
-                worksheet.Cells[row, 1].Value = dataMap.title;
-                worksheet.Cells[row, 2].Value = dataMap.quantity;
-                foreach (var product in dataMap.InOutByProducts)
+                worksheet.Cells[row, 1].Value = checkDataSupplier.title;
+                worksheet.Cells[row, 6].Value = checkDataSupplier.nameSupplier;
+                foreach (var product in checkDataSupplier.dataLocations)
                 {
-                    
-                    worksheet.Cells[row, 3].Value = product.status == 1 ? "Import" : "Deliverynote";
-                    worksheet.Cells[row, 4].Value = product.location;
-                    worksheet.Cells[row, 5].Value = product.updateat;
-                    worksheet.Cells[row, 6].Value = product.quantity;
+
+                    worksheet.Cells[row, 2].Value = product.area;
+                    worksheet.Cells[row, 3].Value = product.line;
+                    worksheet.Cells[row, 4].Value = product.shelf;
+                    worksheet.Cells[row, 4].Value = product.code;
 
                     row++;
                 }
 
-                worksheet.Cells[row, 7].Value = dataMap.supplier;
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
                 return package.GetAsByteArray();
             }
@@ -582,92 +617,37 @@ namespace quanlykhoupdate.Service
 
         public byte[] FindAllDownLoadExcelByCodeProduct(string code)
         {
-            var list = new List<ProductInOut>();
-            var data = _context.product.Include(s => s.suppliers).Where(x => x.title == code).ToList();
-
-            foreach(var item in data)
-            {
-                list.Add(loadDataOutIn(item));
-            }
+            var checkDataSupplier = _context.product
+                .Where(x => x.title == code)
+                .Include(x => x.suppliers)
+                .Include(pl => pl.product_Locations)
+                .ThenInclude(l => l.location_Addrs)
+                .Include(u => u.update_Histories)
+                .ThenInclude(l => l.location_Addrs)
+                .AsNoTracking()
+                .Select(x => new dataProductLocation
+                {
+                Id = x.id,
+                title = x.title,
+                nameSupplier = x.suppliers.title,
+                dataLocations = x.product_Locations.Select(lc => new dataLocation
+                {
+                    code = lc.location_Addrs.code_location_addr,
+                    area = lc.location_Addrs.area,
+                    line = lc.location_Addrs.line,
+                    shelf = lc.location_Addrs.shelf,
+                    quantity = lc.quantity
+                }).ToList()
+                }).ToList();
             using (var package = new ExcelPackage())
             {
                 var worksheet = package.Workbook.Worksheets.Add("Products");
                 worksheet.Cells[1, 1].Value = "Product";
-                worksheet.Cells[1, 2].Value = "Quantity";
-                worksheet.Cells[1, 3].Value = "Status";
-                worksheet.Cells[1, 4].Value = "Location";
-                worksheet.Cells[1, 5].Value = "Date";
-                worksheet.Cells[1, 6].Value = "Quantity";
-                worksheet.Cells[1, 7].Value = "Warehouse ID";
-
-                // Định dạng tiêu đề
-                using (var range = worksheet.Cells[1, 1, 1, 7])
-                {
-                    range.Style.Font.Bold = true; // Chữ in đậm
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
-                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
-                }
-
-                // Đổ dữ liệu vào file Excel
-                int row = 2;
-
-                int rowItem = 2;
-
-                foreach (var product in list)
-                {
-                    worksheet.Cells[row, 1].Value = product.title;
-                    worksheet.Cells[row, 2].Value = product.quantity;
-
-                    if (product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
-                    {
-                        worksheet.Cells[row, 7].Value = product.supplier;
-
-                        foreach (var product2 in product.InOutByProducts)
-                        {
-                            worksheet.Cells[row, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
-                            worksheet.Cells[row, 4].Value = product2.location;
-                            worksheet.Cells[row, 5].Value = product2.updateat;
-                            worksheet.Cells[row, 6].Value = product2.quantity;
-
-                            row++;
-
-                        }
-                    }
-                    else
-                    {
-                        worksheet.Cells[row, 7].Value = product.supplier;
-                        row++;
-                    }
-                }
-
-                worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
-                return package.GetAsByteArray();
-            }
-        }
-
-        public byte[] FindAllDownLoadExcelByCodeProductList(List<string> code)
-        {
-            var list = new List<ProductInOut>();
-            foreach (var itemData in code)
-            {
-                var data = _context.product.Include(s => s.suppliers).Where(x => x.title == itemData).ToList();
-
-                foreach (var item in data)
-                {
-                    list.Add(loadDataOutIn(item));
-                }
-            }
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Products");
-                worksheet.Cells[1, 1].Value = "Product";
-                worksheet.Cells[1, 2].Value = "Quantity";
-                worksheet.Cells[1, 3].Value = "Status";
-                worksheet.Cells[1, 4].Value = "Location";
-                worksheet.Cells[1, 5].Value = "Date";
-                worksheet.Cells[1, 6].Value = "Quantity";
-                worksheet.Cells[1, 7].Value = "Warehouse ID";
+                worksheet.Cells[1, 2].Value = "Area";
+                worksheet.Cells[1, 3].Value = "Line";
+                worksheet.Cells[1, 4].Value = "Shelf";
+                worksheet.Cells[1, 5].Value = "Location";
+                worksheet.Cells[1, 6].Value = "Warehouse ID";
 
                 // Định dạng tiêu đề
                 using (var range = worksheet.Cells[1, 1, 1, 6])
@@ -681,22 +661,20 @@ namespace quanlykhoupdate.Service
                 // Đổ dữ liệu vào file Excel
                 int row = 2;
 
-                int rowItem = 2;
-
-                foreach (var product in list)
+                foreach (var product in checkDataSupplier)
                 {
                     worksheet.Cells[row, 1].Value = product.title;
-                    worksheet.Cells[row, 2].Value = product.quantity;
-                    if(product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
-                    {
-                        worksheet.Cells[row, 7].Value = product.supplier;
+                    worksheet.Cells[row, 6].Value = product.nameSupplier;
 
-                        foreach (var product2 in product.InOutByProducts)
+                    if (product.dataLocations != null && product.dataLocations.Any() && product.dataLocations.Count > 0)
+                    {
+
+                        foreach (var product2 in product.dataLocations)
                         {
-                            worksheet.Cells[row, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
-                            worksheet.Cells[row, 4].Value = product2.location;
-                            worksheet.Cells[row, 5].Value = product2.updateat;
-                            worksheet.Cells[row, 6].Value = product2.quantity;
+                            worksheet.Cells[row, 3].Value = product2.area;
+                            worksheet.Cells[row, 4].Value = product2.line;
+                            worksheet.Cells[row, 5].Value = product2.shelf;
+                            worksheet.Cells[row, 6].Value = product2.code;
 
                             row++;
 
@@ -704,11 +682,10 @@ namespace quanlykhoupdate.Service
                     }
                     else
                     {
-                        worksheet.Cells[row, 7].Value = product.supplier;
                         row++;
                     }
-                    
                 }
+
 
                 worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
                 return package.GetAsByteArray();
@@ -751,75 +728,409 @@ namespace quanlykhoupdate.Service
             {
                 var worksheet = package.Workbook.Worksheets.Add("Products");
                 worksheet.Cells[1, 1].Value = "Product";
-                worksheet.Cells[1, 2].Value = "Quantity";
-                worksheet.Cells[1, 3].Value = "Status";
-                worksheet.Cells[1, 4].Value = "Location";
-                worksheet.Cells[1, 5].Value = "Date";
-                worksheet.Cells[1, 6].Value = "Location Product";
-                worksheet.Cells[1, 7].Value = "Area";
-                worksheet.Cells[1, 8].Value = "Line";
-                worksheet.Cells[1, 9].Value = "Shelf";
-                worksheet.Cells[1, 10].Value = "Supplier";
+                worksheet.Cells[1, 2].Value = "Area";
+                worksheet.Cells[1, 3].Value = "Line";
+                worksheet.Cells[1, 4].Value = "Shelf";
+                worksheet.Cells[1, 5].Value = "Location";
+                worksheet.Cells[1, 6].Value = "Warehouse ID";
 
                 // Định dạng tiêu đề
-                using (var range = worksheet.Cells[1, 1, 1, 10])
+                using (var range = worksheet.Cells[1, 1, 1, 6])
                 {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Font.Bold = true; // Chữ in đậm
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
                 }
 
-                int row = 2; // Bắt đầu từ dòng thứ 2
+                // Đổ dữ liệu vào file Excel
+                int row = 2;
 
                 foreach (var product in checkDataSupplier)
                 {
-                    int rowStart = row;
-                    int maxRows = Math.Max(product.dataLocations.Count, product.inOutByProducts.Count);
+                    worksheet.Cells[row, 1].Value = product.title;
+                    worksheet.Cells[row, 6].Value = product.nameSupplier;
 
-                    for (int i = 0; i < maxRows; i++)
+                    if (product.dataLocations != null && product.dataLocations.Any() && product.dataLocations.Count > 0)
                     {
-                        if (i == 0)
-                        {
-                            worksheet.Cells[row, 1].Value = product.title;
-                            worksheet.Cells[row, 10].Value = product.nameSupplier;
-                        }
 
-                        // Ghi dữ liệu từ danh sách địa chỉ
-                        if (i < product.dataLocations.Count)
+                        foreach (var product2 in product.dataLocations)
                         {
-                            var location = product.dataLocations[i];
-                            worksheet.Cells[row, 6].Value = location.code;
-                            worksheet.Cells[row, 7].Value = location.area;
-                            worksheet.Cells[row, 8].Value = location.line;
-                            worksheet.Cells[row, 9].Value = location.shelf;
-                        }
+                            worksheet.Cells[row, 3].Value = product2.area;
+                            worksheet.Cells[row, 4].Value = product2.line;
+                            worksheet.Cells[row, 5].Value = product2.shelf;
+                            worksheet.Cells[row, 6].Value = product2.code;
 
-                        // Ghi dữ liệu từ danh sách nhập xuất
-                        if (i < product.inOutByProducts.Count)
-                        {
-                            var history = product.inOutByProducts[i];
-                            worksheet.Cells[row, 2].Value = history.quantity;
-                            worksheet.Cells[row, 3].Value = history.status == 1 ? "Import" : "Deliverynote";
-                            worksheet.Cells[row, 4].Value = history.location;
-                            worksheet.Cells[row, 5].Value = history.updateat;
-                        }
+                            row++;
 
-                        row++;
+                        }
                     }
-
-                    // Merge cells cho cột Product và Supplier nếu có nhiều dòng
-                    if (maxRows > 1)
+                    else
                     {
-                        worksheet.Cells[rowStart, 1, row - 1, 1].Merge = true; // Merge Product
-                        worksheet.Cells[rowStart, 10, row - 1, 10].Merge = true; // Merge Supplier
-                        worksheet.Cells[rowStart, 1, row - 1, 10].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        row++;
                     }
                 }
 
-                worksheet.Cells.AutoFitColumns(); // Tự động căn chỉnh cột
+
+                worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
                 return package.GetAsByteArray();
             }
         }
+
+        public byte[] FindAllDownLoadExcelByCodeProductList(List<string> code)
+        {
+            var list = new List<ProductInOut>();
+            foreach (var itemData in code)
+            {
+                var data = _context.product.Include(s => s.suppliers).Where(x => x.title == itemData).ToList();
+
+                foreach (var item in data)
+                {
+                    list.Add(loadDataOutIn(item));
+                }
+            }
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Products");
+                worksheet.Cells[1, 1].Value = "Product";
+                worksheet.Cells[1, 2].Value = "Area";
+                worksheet.Cells[1, 3].Value = "Line";
+                worksheet.Cells[1, 4].Value = "Shelf";
+                worksheet.Cells[1, 5].Value = "Location";
+                worksheet.Cells[1, 6].Value = "Warehouse ID";
+
+                // Định dạng tiêu đề
+                using (var range = worksheet.Cells[1, 1, 1, 6])
+                {
+                    range.Style.Font.Bold = true; // Chữ in đậm
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+                }
+
+                // Đổ dữ liệu vào file Excel
+                int row = 2;
+
+                int rowItem = 2;
+
+                foreach (var product in list)
+                {
+                    worksheet.Cells[row, 1].Value = product.title;
+
+                    worksheet.Cells[row, 6].Value = product.supplier;
+                    if (product.locationProductDatas != null && product.locationProductDatas.Any() && product.locationProductDatas.Count > 0)
+                    {
+
+                        foreach (var product2 in product.locationProductDatas)
+                        {
+                            worksheet.Cells[row, 2].Value = product2.area;
+                            worksheet.Cells[row, 3].Value = product2.line;
+                            worksheet.Cells[row, 4].Value = product2.shelf;
+                            worksheet.Cells[row, 5].Value = product2.code;
+
+                            row++;
+
+                        }
+                    }
+                    else
+                    {
+                        row++;
+                    }
+
+                }
+
+                worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+                return package.GetAsByteArray();
+            }
+        }
+
+        //public byte[] FindAllDownLoadExcel(int id)
+        //{
+        //    var data = _context.product.FirstOrDefault(x => x.id == id);
+
+        //    var dataMap = loadDataOutIn(data);
+        //    using (var package = new ExcelPackage())
+        //    {
+        //        var worksheet = package.Workbook.Worksheets.Add("Products");
+        //        worksheet.Cells[1, 1].Value = "Product";
+        //        worksheet.Cells[1, 2].Value = "Quantity";
+        //        worksheet.Cells[1, 3].Value = "Status";
+        //        worksheet.Cells[1, 4].Value = "Location";
+        //        worksheet.Cells[1, 5].Value = "Date";
+        //        worksheet.Cells[1, 6].Value = "Quantity";
+        //        worksheet.Cells[1, 7].Value = "Warehouse ID";
+
+        //        // Định dạng tiêu đề
+        //        using (var range = worksheet.Cells[1, 1, 1, 6])
+        //        {
+        //            range.Style.Font.Bold = true; // Chữ in đậm
+        //            range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+        //            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+        //            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+        //        }
+
+        //        // Đổ dữ liệu vào file Excel
+        //        int row = 2;
+
+        //        worksheet.Cells[row, 1].Value = dataMap.title;
+        //        worksheet.Cells[row, 2].Value = dataMap.quantity;
+        //        foreach (var product in dataMap.InOutByProducts)
+        //        {
+
+        //            worksheet.Cells[row, 3].Value = product.status == 1 ? "Import" : "Deliverynote";
+        //            worksheet.Cells[row, 4].Value = product.location;
+        //            worksheet.Cells[row, 5].Value = product.updateat;
+        //            worksheet.Cells[row, 6].Value = product.quantity;
+
+        //            row++;
+        //        }
+
+        //        worksheet.Cells[row, 7].Value = dataMap.supplier;
+        //        worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+        //        return package.GetAsByteArray();
+        //    }
+        //}
+
+        //public byte[] FindAllDownLoadExcelByCodeProduct(string code)
+        //{
+        //    var list = new List<ProductInOut>();
+        //    var data = _context.product.Include(s => s.suppliers).Where(x => x.title == code).ToList();
+
+        //    foreach(var item in data)
+        //    {
+        //        list.Add(loadDataOutIn(item));
+        //    }
+        //    using (var package = new ExcelPackage())
+        //    {
+        //        var worksheet = package.Workbook.Worksheets.Add("Products");
+        //        worksheet.Cells[1, 1].Value = "Product";
+        //        worksheet.Cells[1, 2].Value = "Quantity";
+        //        worksheet.Cells[1, 3].Value = "Status";
+        //        worksheet.Cells[1, 4].Value = "Location";
+        //        worksheet.Cells[1, 5].Value = "Date";
+        //        worksheet.Cells[1, 6].Value = "Quantity";
+        //        worksheet.Cells[1, 7].Value = "Warehouse ID";
+
+        //        // Định dạng tiêu đề
+        //        using (var range = worksheet.Cells[1, 1, 1, 7])
+        //        {
+        //            range.Style.Font.Bold = true; // Chữ in đậm
+        //            range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+        //            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+        //            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+        //        }
+
+        //        // Đổ dữ liệu vào file Excel
+        //        int row = 2;
+
+        //        int rowItem = 2;
+
+        //        foreach (var product in list)
+        //        {
+        //            worksheet.Cells[row, 1].Value = product.title;
+        //            worksheet.Cells[row, 2].Value = product.quantity;
+
+        //            if (product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
+        //            {
+        //                worksheet.Cells[row, 7].Value = product.supplier;
+
+        //                foreach (var product2 in product.InOutByProducts)
+        //                {
+        //                    worksheet.Cells[row, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
+        //                    worksheet.Cells[row, 4].Value = product2.location;
+        //                    worksheet.Cells[row, 5].Value = product2.updateat;
+        //                    worksheet.Cells[row, 6].Value = product2.quantity;
+
+        //                    row++;
+
+        //                }
+        //            }
+        //            else
+        //            {
+        //                worksheet.Cells[row, 7].Value = product.supplier;
+        //                row++;
+        //            }
+        //        }
+
+        //        worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+        //        return package.GetAsByteArray();
+        //    }
+        //}
+
+        //public byte[] FindAllDownLoadExcelByCodeProductList(List<string> code)
+        //{
+        //    var list = new List<ProductInOut>();
+        //    foreach (var itemData in code)
+        //    {
+        //        var data = _context.product.Include(s => s.suppliers).Where(x => x.title == itemData).ToList();
+
+        //        foreach (var item in data)
+        //        {
+        //            list.Add(loadDataOutIn(item));
+        //        }
+        //    }
+        //    using (var package = new ExcelPackage())
+        //    {
+        //        var worksheet = package.Workbook.Worksheets.Add("Products");
+        //        worksheet.Cells[1, 1].Value = "Product";
+        //        worksheet.Cells[1, 2].Value = "Quantity";
+        //        worksheet.Cells[1, 3].Value = "Status";
+        //        worksheet.Cells[1, 4].Value = "Location";
+        //        worksheet.Cells[1, 5].Value = "Date";
+        //        worksheet.Cells[1, 6].Value = "Quantity";
+        //        worksheet.Cells[1, 7].Value = "Warehouse ID";
+
+        //        // Định dạng tiêu đề
+        //        using (var range = worksheet.Cells[1, 1, 1, 6])
+        //        {
+        //            range.Style.Font.Bold = true; // Chữ in đậm
+        //            range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
+        //            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray); // Nền xám nhạt
+        //            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center; // Căn giữa nội dung
+        //        }
+
+        //        // Đổ dữ liệu vào file Excel
+        //        int row = 2;
+
+        //        int rowItem = 2;
+
+        //        foreach (var product in list)
+        //        {
+        //            worksheet.Cells[row, 1].Value = product.title;
+        //            worksheet.Cells[row, 2].Value = product.quantity;
+        //            if(product.InOutByProducts != null && product.InOutByProducts.Any() && product.InOutByProducts.Count > 0)
+        //            {
+        //                worksheet.Cells[row, 7].Value = product.supplier;
+
+        //                foreach (var product2 in product.InOutByProducts)
+        //                {
+        //                    worksheet.Cells[row, 3].Value = product2.status == 1 ? "Import" : "Deliverynote";
+        //                    worksheet.Cells[row, 4].Value = product2.location;
+        //                    worksheet.Cells[row, 5].Value = product2.updateat;
+        //                    worksheet.Cells[row, 6].Value = product2.quantity;
+
+        //                    row++;
+
+        //                }
+        //            }
+        //            else
+        //            {
+        //                worksheet.Cells[row, 7].Value = product.supplier;
+        //                row++;
+        //            }
+
+        //        }
+
+        //        worksheet.Cells.AutoFitColumns(); // Tự động chỉnh độ rộng cột
+        //        return package.GetAsByteArray();
+        //    }
+        //}
+
+        //public byte[] FindAllDownLoadExcelBySupplier(int supplier)
+        //{
+        //    var checkDataSupplier = _context.product
+        //.Where(x => x.warehouseID == supplier)
+        //.Include(x => x.suppliers)
+        //.Include(pl => pl.product_Locations)
+        //    .ThenInclude(l => l.location_Addrs)
+        //.Include(u => u.update_Histories)
+        //    .ThenInclude(l => l.location_Addrs)
+        //.AsNoTracking()
+        //.Select(x => new dataProductLocation
+        //{
+        //    Id = x.id,
+        //    title = x.title,
+        //    nameSupplier = x.suppliers.title,
+        //    dataLocations = x.product_Locations.Select(lc => new dataLocation
+        //    {
+        //        code = lc.location_Addrs.code_location_addr,
+        //        area = lc.location_Addrs.area,
+        //        line = lc.location_Addrs.line,
+        //        shelf = lc.location_Addrs.shelf,
+        //        quantity = lc.quantity
+        //    }).ToList(),
+        //    inOutByProducts = x.update_Histories.Select(ud => new InOutByProduct
+        //    {
+        //        location = ud.location_Addrs.code_location_addr,
+        //        quantity = ud.quantity,
+        //        status = ud.status,
+        //        updateat = ud.last_modify_date
+        //    }).ToList()
+        //}).ToList();
+
+        //    using (var package = new ExcelPackage())
+        //    {
+        //        var worksheet = package.Workbook.Worksheets.Add("Products");
+        //        worksheet.Cells[1, 1].Value = "Product";
+        //        worksheet.Cells[1, 2].Value = "Quantity";
+        //        worksheet.Cells[1, 3].Value = "Status";
+        //        worksheet.Cells[1, 4].Value = "Location";
+        //        worksheet.Cells[1, 5].Value = "Date";
+        //        worksheet.Cells[1, 6].Value = "Location Product";
+        //        worksheet.Cells[1, 7].Value = "Area";
+        //        worksheet.Cells[1, 8].Value = "Line";
+        //        worksheet.Cells[1, 9].Value = "Shelf";
+        //        worksheet.Cells[1, 10].Value = "Supplier";
+
+        //        // Định dạng tiêu đề
+        //        using (var range = worksheet.Cells[1, 1, 1, 10])
+        //        {
+        //            range.Style.Font.Bold = true;
+        //            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+        //            range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+        //            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+        //        }
+
+        //        int row = 2; // Bắt đầu từ dòng thứ 2
+
+        //        foreach (var product in checkDataSupplier)
+        //        {
+        //            int rowStart = row;
+        //            int maxRows = Math.Max(product.dataLocations.Count, product.inOutByProducts.Count);
+
+        //            for (int i = 0; i < maxRows; i++)
+        //            {
+        //                if (i == 0)
+        //                {
+        //                    worksheet.Cells[row, 1].Value = product.title;
+        //                    worksheet.Cells[row, 10].Value = product.nameSupplier;
+        //                }
+
+        //                // Ghi dữ liệu từ danh sách địa chỉ
+        //                if (i < product.dataLocations.Count)
+        //                {
+        //                    var location = product.dataLocations[i];
+        //                    worksheet.Cells[row, 6].Value = location.code;
+        //                    worksheet.Cells[row, 7].Value = location.area;
+        //                    worksheet.Cells[row, 8].Value = location.line;
+        //                    worksheet.Cells[row, 9].Value = location.shelf;
+        //                }
+
+        //                // Ghi dữ liệu từ danh sách nhập xuất
+        //                if (i < product.inOutByProducts.Count)
+        //                {
+        //                    var history = product.inOutByProducts[i];
+        //                    worksheet.Cells[row, 2].Value = history.quantity;
+        //                    worksheet.Cells[row, 3].Value = history.status == 1 ? "Import" : "Deliverynote";
+        //                    worksheet.Cells[row, 4].Value = history.location;
+        //                    worksheet.Cells[row, 5].Value = history.updateat;
+        //                }
+
+        //                row++;
+        //            }
+
+        //            // Merge cells cho cột Product và Supplier nếu có nhiều dòng
+        //            if (maxRows > 1)
+        //            {
+        //                worksheet.Cells[rowStart, 1, row - 1, 1].Merge = true; // Merge Product
+        //                worksheet.Cells[rowStart, 10, row - 1, 10].Merge = true; // Merge Supplier
+        //                worksheet.Cells[rowStart, 1, row - 1, 10].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+        //            }
+        //        }
+
+        //        worksheet.Cells.AutoFitColumns(); // Tự động căn chỉnh cột
+        //        return package.GetAsByteArray();
+        //    }
+        //}
     }
 }

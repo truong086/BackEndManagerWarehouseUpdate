@@ -44,6 +44,13 @@ namespace quanlykhoupdate.Controllers
             return await _planService.FindAllDataByDone(data);
         }
 
+        [HttpPost]
+        [Route(nameof(FindAllDataByNoDone))]
+        public async Task<PayLoad<object>> FindAllDataByNoDone(searchDataPost data)
+        {
+            return await _planService.FindAllDataByNoDone(data);
+        }
+
         [HttpGet]
         [Route(nameof(checkPlanLocationUpdate))]
         public async Task<PayLoad<object>> checkPlanLocationUpdate(int id, string code)
