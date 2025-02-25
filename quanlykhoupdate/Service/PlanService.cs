@@ -505,7 +505,7 @@ namespace quanlykhoupdate.Service
 
                 var checkData = _context.location_addr.FirstOrDefault(x => x.code_location_addr == code);
 
-                var checkPlan = _context.plan.FirstOrDefault(x => (x.location_addr_id_old == checkData.id || x.location_addr_id_new == checkData.id) && x.id == checkIdPlan.id && x.status != 1);
+                var checkPlan = _context.plan.FirstOrDefault(x => (x.location_addr_id_old == checkData.id || x.location_addr_id_new == checkData.id) && x.id != checkIdPlan.id && x.status != 1);
                 if (checkPlan != null) return await Task.FromResult(PayLoad<object>.CreatedFail(Status.DATATONTAI));
 
                 return await Task.FromResult(PayLoad<object>.Successfully(new
