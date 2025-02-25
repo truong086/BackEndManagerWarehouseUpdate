@@ -163,13 +163,13 @@ namespace quanlykhoupdate.Service
             using (var package = new ExcelPackage())
             {
                 var worksheet = package.Workbook.Worksheets.Add("Products");
-                worksheet.Cells[1, 1].Value = "Title";
-                worksheet.Cells[1, 2].Value = "Area";
-                worksheet.Cells[1, 3].Value = "Line";
-                worksheet.Cells[1, 4].Value = "Shelf";
-                worksheet.Cells[1, 5].Value = "Code";
-                worksheet.Cells[1, 6].Value = "Warehouse ID";
-                worksheet.Cells[1, 7].Value = "Quantity";
+                worksheet.Cells[1, 1].Value = "產品";
+                worksheet.Cells[1, 2].Value = "區域";
+                worksheet.Cells[1, 3].Value = "線";
+                worksheet.Cells[1, 4].Value = "架子";
+                worksheet.Cells[1, 5].Value = "地點";
+                worksheet.Cells[1, 6].Value = "供應商";
+                worksheet.Cells[1, 7].Value = "數量";
                 //worksheet.Cells[1, 8].Value = "Status";
                 //worksheet.Cells[1, 9].Value = "Quantity";
                 //worksheet.Cells[1, 10].Value = "Location";

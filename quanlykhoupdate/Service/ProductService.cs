@@ -527,6 +527,7 @@ namespace quanlykhoupdate.Service
                     line = item.location_Addrs.line,
                     shelf = item.location_Addrs.shelf,
                     code = item.location_Addrs.code_location_addr,
+                    quantity = item.quantity,
                 });
             }
             return list;
@@ -584,9 +585,10 @@ namespace quanlykhoupdate.Service
                 worksheet.Cells[1, 4].Value = "架子";
                 worksheet.Cells[1, 5].Value = "地點";
                 worksheet.Cells[1, 6].Value = "供應商";
+                worksheet.Cells[1, 7].Value = "供應商";
 
                 // Định dạng tiêu đề
-                using (var range = worksheet.Cells[1, 1, 1, 6])
+                using (var range = worksheet.Cells[1, 1, 1, 7])
                 {
                     range.Style.Font.Bold = true; // Chữ in đậm
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
@@ -606,6 +608,7 @@ namespace quanlykhoupdate.Service
                     worksheet.Cells[row, 3].Value = product.line;
                     worksheet.Cells[row, 4].Value = product.shelf;
                     worksheet.Cells[row, 4].Value = product.code;
+                    worksheet.Cells[row, 7].Value = product.quantity;
 
                     row++;
                 }
@@ -648,9 +651,10 @@ namespace quanlykhoupdate.Service
                 worksheet.Cells[1, 4].Value = "架子";
                 worksheet.Cells[1, 5].Value = "地點";
                 worksheet.Cells[1, 6].Value = "供應商";
+                worksheet.Cells[1, 7].Value = "數量";
 
                 // Định dạng tiêu đề
-                using (var range = worksheet.Cells[1, 1, 1, 6])
+                using (var range = worksheet.Cells[1, 1, 1, 7])
                 {
                     range.Style.Font.Bold = true; // Chữ in đậm
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
@@ -675,6 +679,7 @@ namespace quanlykhoupdate.Service
                             worksheet.Cells[row, 4].Value = product2.line;
                             worksheet.Cells[row, 5].Value = product2.shelf;
                             worksheet.Cells[row, 6].Value = product2.code;
+                            worksheet.Cells[row, 7].Value = product2.quantity;
 
                             row++;
 
@@ -733,9 +738,10 @@ namespace quanlykhoupdate.Service
                 worksheet.Cells[1, 4].Value = "架子";
                 worksheet.Cells[1, 5].Value = "地點";
                 worksheet.Cells[1, 6].Value = "供應商";
+                worksheet.Cells[1, 7].Value = "數量";
 
                 // Định dạng tiêu đề
-                using (var range = worksheet.Cells[1, 1, 1, 6])
+                using (var range = worksheet.Cells[1, 1, 1, 7])
                 {
                     range.Style.Font.Bold = true; // Chữ in đậm
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid; // Nền đặc
@@ -760,6 +766,7 @@ namespace quanlykhoupdate.Service
                             worksheet.Cells[row, 4].Value = product2.line;
                             worksheet.Cells[row, 5].Value = product2.shelf;
                             worksheet.Cells[row, 6].Value = product2.code;
+                            worksheet.Cells[row, 7].Value = product2.quantity;
 
                             row++;
 
@@ -798,6 +805,7 @@ namespace quanlykhoupdate.Service
                 worksheet.Cells[1, 4].Value = "架子";
                 worksheet.Cells[1, 5].Value = "地點";
                 worksheet.Cells[1, 6].Value = "供應商";
+                worksheet.Cells[1, 7].Value = "數量";
 
                 // Định dạng tiêu đề
                 using (var range = worksheet.Cells[1, 1, 1, 6])
@@ -827,6 +835,7 @@ namespace quanlykhoupdate.Service
                             worksheet.Cells[row, 3].Value = product2.line;
                             worksheet.Cells[row, 4].Value = product2.shelf;
                             worksheet.Cells[row, 5].Value = product2.code;
+                            worksheet.Cells[row, 7].Value = product2.quantity;
 
                             row++;
 
