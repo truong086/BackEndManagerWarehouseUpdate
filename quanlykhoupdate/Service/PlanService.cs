@@ -409,12 +409,13 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToUniversalTime();
-                DateTimeOffset dateToUtc = datas.dateto.Value.ToUniversalTime().AddDays(1).AddTicks(-1); // Lấy hết ngày
+                // Chỉ lấy phần ngày, bỏ qua múi giờ
+                // Chuyển DateTimeOffset? sang DateTime, bỏ múi giờ
+                DateTime dateFrom = datas.datefrom?.UtcDateTime.Date ?? DateTime.UtcNow.Date;
+                DateTime dateTo = datas.dateto?.UtcDateTime.Date.AddHours(10).AddTicks(-1) ?? DateTime.UtcNow.Date.AddHours(10).AddTicks(-1);
 
-                // Lọc dữ liệu trong khoảng thời gian
                 var data = await _context.plan
-                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status == 1)
+                    .Where(x => x.time >= dateFrom && x.time <= dateTo && x.status == 1)
                     .OrderByDescending(x => x.id)
                     .ToListAsync();
 
@@ -529,7 +530,7 @@ namespace quanlykhoupdate.Service
             {
                 // Chuyển datefrom và dateto về UTC (nếu dữ liệu trong DB lưu UTC)
                 DateTimeOffset dateFromUtc = datas.datefrom.Value.ToUniversalTime();
-                DateTimeOffset dateToUtc = datas.dateto.Value.ToUniversalTime().AddDays(1).AddTicks(-1); // Lấy hết ngày
+                DateTimeOffset dateToUtc = datas.dateto.Value.ToUniversalTime().AddHours(10).AddTicks(-1); // Lấy hết ngày
 
                 // Lọc dữ liệu trong khoảng thời gian
                 var data = await _context.plan
