@@ -305,7 +305,9 @@ namespace quanlykhoupdate.Service
 
         public byte[] FindAllDownLoadExcel(searchDatetimePlan data)
         {
-            var list = _context.plan.Where(x => x.time >= data.datefrom && x.time <= data.dateto).ToList();
+            DateTimeOffset dateFromUtc = data.datefrom.Value.ToUniversalTime();
+            DateTimeOffset dateToUtc = data.dateto.Value.ToUniversalTime(); // Lấy hết ngày
+            var list = _context.plan.Where(x => x.time >= dateFromUtc && x.time <= dateToUtc).ToList();
             using (var package = new ExcelPackage())
             {
                 var worksheet = package.Workbook.Worksheets.Add("Products");
@@ -417,7 +419,7 @@ namespace quanlykhoupdate.Service
                 DateTimeOffset dateFromUtc = datas.datefrom.Value.ToUniversalTime();
                 DateTimeOffset dateToUtc = datas.dateto.Value.ToUniversalTime(); // Lấy hết ngày
                 var data = await _context.plan
-                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status == 1)
+                    .Where(x => x.time >= dateFromUtc && x.time < dateToUtc && x.status == 1)
                     .OrderByDescending(x => x.id)
                     .ToListAsync();
 
@@ -536,7 +538,7 @@ namespace quanlykhoupdate.Service
 
                 // Lọc dữ liệu trong khoảng thời gian
                 var data = await _context.plan
-                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status != 1)
+                    .Where(x => x.time >= dateFromUtc && x.time < dateToUtc && x.status != 1)
                     .OrderByDescending(x => x.id)
                     .ToListAsync();
 
