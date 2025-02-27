@@ -226,6 +226,7 @@ namespace quanlykhoupdate.Service
                     UpdateLocationData(checkLocaOld, checkLocationNewItem);
                     UpdateLocationData(checkLocationNew, checkLocationOldItem);
                     checkPlan.status = 1;
+                    checkPlan.time = DateTimeOffset.UtcNow;
                 }
                 else
                 {
@@ -416,10 +417,10 @@ namespace quanlykhoupdate.Service
                 //DateTime dateFrom = datas.datefrom?.UtcDateTime.Date ?? DateTime.UtcNow.Date;
                 //DateTime dateTo = datas.dateto?.UtcDateTime.Date.AddHours(1) ?? DateTime.UtcNow.Date.AddHours(1);
 
-                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToUniversalTime();
-                DateTimeOffset dateToUtc = datas.dateto.Value.ToUniversalTime(); // Lấy hết ngày
+                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToOffset(TimeSpan.FromHours(8));
+                DateTimeOffset dateToUtc = datas.dateto.Value.ToOffset(TimeSpan.FromHours(8)); // Lấy hết ngày
                 var data = await _context.plan
-                    .Where(x => x.time >= dateFromUtc && x.time < dateToUtc && x.status == 1)
+                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status == 1)
                     .OrderByDescending(x => x.id)
                     .ToListAsync();
 
@@ -533,12 +534,12 @@ namespace quanlykhoupdate.Service
             try
             {
                 // Chuyển datefrom và dateto về UTC (nếu dữ liệu trong DB lưu UTC)
-                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToUniversalTime();
-                DateTimeOffset dateToUtc = datas.dateto.Value.ToUniversalTime(); // Lấy hết ngày
+                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToOffset(TimeSpan.FromHours(8));
+                DateTimeOffset dateToUtc = datas.dateto.Value.ToOffset(TimeSpan.FromHours(8)); // Lấy hết ngày
 
                 // Lọc dữ liệu trong khoảng thời gian
                 var data = await _context.plan
-                    .Where(x => x.time >= dateFromUtc && x.time < dateToUtc && x.status != 1)
+                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status != 1)
                     .OrderByDescending(x => x.id)
                     .ToListAsync();
 

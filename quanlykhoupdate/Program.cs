@@ -28,7 +28,7 @@ var corsBuilder = new CorsPolicyBuilder();
 corsBuilder.AllowAnyHeader();
 corsBuilder.AllowAnyMethod();
 corsBuilder.AllowAnyOrigin();
-corsBuilder.WithOrigins("http://52.184.83.97:8081"); // Đây là Url bên frontEnd
+corsBuilder.WithOrigins("http://52.184.83.97:8081", "http://localhost:8081"); // Đây là Url bên frontEnd
 //corsBuilder.WithOrigins("http://localhost:8081"); // Đây là Url bên frontEnd
 corsBuilder.AllowCredentials();
 builder.Services.AddCors(options =>
@@ -42,8 +42,8 @@ builder.Services.AddCors(options =>
 // Đăng ký Firebase Key
 FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile("/home/tsustedu2025_ADMIN/BackEndManagerWarehouseUpdate/quanlykhoupdate/notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
-    //Credential = GoogleCredential.FromFile("C:\\Users\\ASUS\\OneDrive\\Desktop\\VueJs\\SpringBoot\\notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
+    //Credential = GoogleCredential.FromFile("/home/tsustedu2025_ADMIN/BackEndManagerWarehouseUpdate/quanlykhoupdate/notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
+    Credential = GoogleCredential.FromFile("C:\\Users\\ASUS\\OneDrive\\Desktop\\VueJs\\SpringBoot\\notification-bdf14-firebase-adminsdk-fbsvc-87b7743b04.json")
     //Credential = GoogleCredential.FromFile("/Users/macbook/Downloads/notification-bdf14-firebase-adminsdk-fbsvc-85559dcd12.json")
 });
 
