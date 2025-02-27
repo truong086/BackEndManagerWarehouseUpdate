@@ -26,6 +26,8 @@ namespace quanlykhoupdate.Service
                     data = data.Where(x => x.code_location_addr.Contains(name)).ToList();
 
                 var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                if(pageList.Count <= 0)
+                    pageList = new PageList<object>(loadData(data), 0, pageSize);
 
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {

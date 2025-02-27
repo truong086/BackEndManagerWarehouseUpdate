@@ -215,39 +215,39 @@ namespace quanlykhoupdate.Service
                 if(checkPlan == null)
                     return await Task.FromResult(PayLoad<UpdatePlan>.CreatedFail(Status.DATANULL));
 
-                //if(planData.status == 1)
-                //{
-                //    var checkLocaOld = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_old).ToList();
-                //    var checkLocationNew = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_new).ToList();
-
-                //    var checkLocationNewItem = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_addr_id_new);
-                //    var checkLocationOldItem = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_addr_id_old);
-
-                //    UpdateLocationData(checkLocaOld, checkLocationNewItem);
-                //    UpdateLocationData(checkLocationNew, checkLocationOldItem);
-                //    checkPlan.status = 1;
-                //}
-                //else
-                //{
-                //    checkPlan.status = planData.status;
-                //}
-
                 if (planData.status == 1)
                 {
-                    var checkLocaOld = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_old).FirstOrDefault();
-                    var checkLocationNew = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_new).FirstOrDefault();
+                    var checkLocaOld = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_old).ToList();
+                    var checkLocationNew = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_new).ToList();
 
                     var checkLocationNewItem = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_addr_id_new);
                     var checkLocationOldItem = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_addr_id_old);
 
-                    UpdateLocationData(checkLocaOld, checkLocationNewItem, checkLocationNew.quantity);
-                    UpdateLocationData(checkLocationNew, checkLocationOldItem, checkLocaOld.quantity);
+                    UpdateLocationData(checkLocaOld, checkLocationNewItem);
+                    UpdateLocationData(checkLocationNew, checkLocationOldItem);
                     checkPlan.status = 1;
                 }
                 else
                 {
                     checkPlan.status = planData.status;
                 }
+
+                //if (planData.status == 1)
+                //{
+                //    var checkLocaOld = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_old).FirstOrDefault();
+                //    var checkLocationNew = _context.product_location.Include(x => x.location_Addrs).Where(x => x.location_addr_id == checkPlan.location_addr_id_new).FirstOrDefault();
+
+                //    var checkLocationNewItem = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_addr_id_new);
+                //    var checkLocationOldItem = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_addr_id_old);
+
+                //    UpdateLocationData(checkLocaOld, checkLocationNewItem, checkLocationNew.quantity.Value);
+                //    UpdateLocationData(checkLocationNew, checkLocationOldItem, checkLocaOld.quantity.Value);
+                //    checkPlan.status = 1;
+                //}
+                //else
+                //{
+                //    checkPlan.status = planData.status;
+                //}
 
                 _context.plan.Update(checkPlan);
                 _context.SaveChanges();
@@ -261,34 +261,34 @@ namespace quanlykhoupdate.Service
             }
         }
 
-        //private void UpdateLocationData(List<product_location> data, location_addr location)
-        //{
-        //    if(data.Count > 0)
-        //    {
-        //        foreach(var item in data)
-        //        {
-        //            item.location_addr_id = location.id;
-        //            item.location_Addrs = location;
-
-        //            _context.product_location.Update(item);
-        //            _context.SaveChanges();
-
-        //        }
-        //    }
-        //}
-
-        private void UpdateLocationData(product_location data, location_addr location, int? quantity)
+        private void UpdateLocationData(List<product_location> data, location_addr location)
         {
-            if (data != null)
+            if (data.Count > 0)
             {
-                data.location_addr_id = location.id;
-                data.location_Addrs = location;
-                data.quantity = quantity;
+                foreach (var item in data)
+                {
+                    item.location_addr_id = location.id;
+                    item.location_Addrs = location;
 
-                _context.product_location.Update(data);
-                _context.SaveChanges();
+                    _context.product_location.Update(item);
+                    _context.SaveChanges();
+
+                }
             }
         }
+
+        //private void UpdateLocationData(product_location data, location_addr location, int? quantity)
+        //{
+        //    if (data != null)
+        //    {
+        //        data.location_addr_id = location.id;
+        //        data.location_Addrs = location;
+        //        data.quantity = quantity;
+
+        //        _context.product_location.Update(data);
+        //        _context.SaveChanges();
+        //    }
+        //}
 
         public async Task<PayLoad<object>> FindOne(int id)
         {

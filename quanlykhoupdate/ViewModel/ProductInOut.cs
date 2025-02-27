@@ -9,6 +9,7 @@
         public string? title { get; set; }
         public int? quantity { get; set; }
         public string? supplier { get; set; }
+        public string? supplierTitle { get; set; }
         public List<InOutByProduct>? InOutByProducts { get; set; }
         public List<locationProductData>? locationProductDatas { get; set; }
         public List<object>? history { get; set; }  
