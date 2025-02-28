@@ -169,125 +169,139 @@ namespace quanlykhoupdate.Service
 
             return list;
         }
-        private List<object> loadDataHistory(product data)
+
+        private List<dynamic> loadDataHistory(product data)
         {
-            var list = new List<object>();
-            bool isCheck = true;
 
-            var checkDataproduct = _context.product_location.Select(x => new
-            {
-                id = x.id,
-                product_id = x.product_id,
-                id_location = x.location_addr_id
-            }).FirstOrDefault(x => x.product_id == data.id);
-
-            if(checkDataproduct != null)
-            {
-                var checkLocation = _context.location_addr.FirstOrDefault(x => x.id == checkDataproduct.id_location);
-                var checkPlan = _context.plan.Select(x => new
+            var checkData = _context.update_history.Include(l => l.location_Addrs).Where(x => x.product_id == data.id && x.status == 2)
+                .Select(x => new
                 {
-                    id = x.id,
-                    location_old = x.location_addr_id_old,
-                    location_new = x.location_addr_id_new,
-                    status = x.status,
-                }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_new == checkLocation.id && x.status == 1);
+                    location_old = x.location_Addrs
+                })
+                .ToList<dynamic>();
 
-                if(checkPlan == null)
-                {
-                    checkPlan = _context.plan.Select(x => new
-                    {
-                        id = x.id,
-                        location_old = x.location_addr_id_old,
-                        location_new = x.location_addr_id_new,
-                        status = x.status,
-                    }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_old == checkLocation.id && x.status == 1);
-
-                    int? isCheckLocationOld = 0;
-                    int checkWhile = 0;
-                    var listCheckInt = new List<int>();
-                    if(checkPlan != null)
-                    {
-                        while (isCheck)
-                        {
-                            if (checkWhile == 0)
-                                isCheckLocationOld = checkPlan.location_new;
-                            var checkLocationOld = _context.plan.Include(x => x.location_Addr_Old).Select(x => new {
-                                id = x.id,
-                                location_old = x.location_addr_id_old,
-                                location_new = x.location_addr_id_new,
-                                locationOld = x.location_Addr_Old,
-                                status = x.status,
-                            }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_old == isCheckLocationOld && x.status == 1 && !listCheckInt.Contains(x.id));
-
-                            if (checkLocationOld != null)
-                            {
-                                list.Add(checkLocationOld.location_new);
-                                isCheckLocationOld = checkLocationOld.location_new;
-                                listCheckInt.Add(checkLocationOld.id);
-                            }
-                            else
-                            {
-                                list.Add(checkLocation);
-                                if (list.Count == 1)
-                                {
-                                    var checkLocationOldData = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_new);
-                                    if (checkLocationOldData != null)
-                                        list.Add(checkLocationOldData);
-                                }
-
-                                isCheck = false;
-                            }
-
-                            checkWhile++;
-                        }
-                    }
-                    
-                }
-                    
-
-                else if (checkPlan != null)
-                {
-                    int? isCheckLocationOld = 0;
-                    int checkWhile = 0;
-                    var listCheckInt = new List<int>();
-                    while (isCheck)
-                    {
-                        if(checkWhile == 0)
-                            isCheckLocationOld = checkPlan.location_old;
-                        var checkLocationOld = _context.plan.Include(x => x.location_Addr_Old).Select(x => new {
-                                id = x.id,
-                                location_old = x.location_addr_id_old,
-                                location_new  = x.location_addr_id_new,
-                                locationOld = x.location_Addr_Old,
-                                status = x.status,
-                        }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_new == isCheckLocationOld && x.status == 1 && !listCheckInt.Contains(x.id));
-
-                        if(checkLocationOld != null)
-                        {
-                            list.Add(checkLocationOld.locationOld);
-                            isCheckLocationOld = checkLocationOld.location_old;
-                            listCheckInt.Add(checkLocationOld.id);
-                        }
-                        else
-                        {
-                            list.Add(checkLocation);
-                            if (list.Count == 1)
-                            {
-                                var checkLocationOldData = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_old);
-                                if(checkLocationOldData != null)
-                                    list.Add(checkLocationOldData);
-                            }   
-                            
-                            isCheck = false;
-                        }
-
-                        checkWhile++;
-                    }
-                    
-                }
-            }
-            return list;
+            return checkData;
+            
         }
+        //private List<object> loadDataHistory(product data)
+        //{
+        //    var list = new List<object>();
+        //    bool isCheck = true;
+
+        //    var checkDataproduct = _context.product_location.Select(x => new
+        //    {
+        //        id = x.id,
+        //        product_id = x.product_id,
+        //        id_location = x.location_addr_id
+        //    }).FirstOrDefault(x => x.product_id == data.id);
+
+        //    if(checkDataproduct != null)
+        //    {
+        //        var checkLocation = _context.location_addr.FirstOrDefault(x => x.id == checkDataproduct.id_location);
+        //        var checkPlan = _context.plan.Select(x => new
+        //        {
+        //            id = x.id,
+        //            location_old = x.location_addr_id_old,
+        //            location_new = x.location_addr_id_new,
+        //            status = x.status,
+        //        }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_new == checkLocation.id && x.status == 1);
+
+        //        if(checkPlan == null)
+        //        {
+        //            checkPlan = _context.plan.Select(x => new
+        //            {
+        //                id = x.id,
+        //                location_old = x.location_addr_id_old,
+        //                location_new = x.location_addr_id_new,
+        //                status = x.status,
+        //            }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_old == checkLocation.id && x.status == 1);
+
+        //            int? isCheckLocationOld = 0;
+        //            int checkWhile = 0;
+        //            var listCheckInt = new List<int>();
+        //            if(checkPlan != null)
+        //            {
+        //                while (isCheck)
+        //                {
+        //                    if (checkWhile == 0)
+        //                        isCheckLocationOld = checkPlan.location_new;
+        //                    var checkLocationOld = _context.plan.Include(x => x.location_Addr_Old).Select(x => new {
+        //                        id = x.id,
+        //                        location_old = x.location_addr_id_old,
+        //                        location_new = x.location_addr_id_new,
+        //                        locationOld = x.location_Addr_Old,
+        //                        status = x.status,
+        //                    }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_old == isCheckLocationOld && x.status == 1 && !listCheckInt.Contains(x.id));
+
+        //                    if (checkLocationOld != null)
+        //                    {
+        //                        list.Add(checkLocationOld.location_new);
+        //                        isCheckLocationOld = checkLocationOld.location_new;
+        //                        listCheckInt.Add(checkLocationOld.id);
+        //                    }
+        //                    else
+        //                    {
+        //                        list.Add(checkLocation);
+        //                        if (list.Count == 1)
+        //                        {
+        //                            var checkLocationOldData = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_new);
+        //                            if (checkLocationOldData != null)
+        //                                list.Add(checkLocationOldData);
+        //                        }
+
+        //                        isCheck = false;
+        //                    }
+
+        //                    checkWhile++;
+        //                }
+        //            }
+
+        //        }
+
+
+        //        else if (checkPlan != null)
+        //        {
+        //            int? isCheckLocationOld = 0;
+        //            int checkWhile = 0;
+        //            var listCheckInt = new List<int>();
+        //            while (isCheck)
+        //            {
+        //                if(checkWhile == 0)
+        //                    isCheckLocationOld = checkPlan.location_old;
+        //                var checkLocationOld = _context.plan.Include(x => x.location_Addr_Old).Select(x => new {
+        //                        id = x.id,
+        //                        location_old = x.location_addr_id_old,
+        //                        location_new  = x.location_addr_id_new,
+        //                        locationOld = x.location_Addr_Old,
+        //                        status = x.status,
+        //                }).OrderByDescending(x => x.id).FirstOrDefault(x => x.location_new == isCheckLocationOld && x.status == 1 && !listCheckInt.Contains(x.id));
+
+        //                if(checkLocationOld != null)
+        //                {
+        //                    list.Add(checkLocationOld.locationOld);
+        //                    isCheckLocationOld = checkLocationOld.location_old;
+        //                    listCheckInt.Add(checkLocationOld.id);
+        //                }
+        //                else
+        //                {
+        //                    list.Add(checkLocation);
+        //                    if (list.Count == 1)
+        //                    {
+        //                        var checkLocationOldData = _context.location_addr.FirstOrDefault(x => x.id == checkPlan.location_old);
+        //                        if(checkLocationOldData != null)
+        //                            list.Add(checkLocationOldData);
+        //                    }   
+
+        //                    isCheck = false;
+        //                }
+
+        //                checkWhile++;
+        //            }
+
+        //        }
+        //    }
+        //    return list;
+        //}
 
         public async Task<PayLoad<string>> AddDataSupplier()
         {

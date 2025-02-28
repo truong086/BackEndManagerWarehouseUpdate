@@ -212,7 +212,7 @@ namespace quanlykhoupdate.Service
             try
             {
                 var checkPlan = _context.plan.FirstOrDefault(x => x.id == planData.id && x.status != 1);
-                if(checkPlan == null)
+                if (checkPlan == null)
                     return await Task.FromResult(PayLoad<UpdatePlan>.CreatedFail(Status.DATANULL));
 
                 if (planData.status == 1)
@@ -225,8 +225,8 @@ namespace quanlykhoupdate.Service
 
                     UpdateLocationData(checkLocaOld, checkLocationNewItem);
                     UpdateLocationData(checkLocationNew, checkLocationOldItem);
+
                     checkPlan.status = 1;
-                    checkPlan.time = DateTimeOffset.UtcNow;
                 }
                 else
                 {
@@ -256,7 +256,7 @@ namespace quanlykhoupdate.Service
                 return await Task.FromResult(PayLoad<UpdatePlan>.Successfully(planData));
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return await Task.FromResult(PayLoad<UpdatePlan>.CreatedFail(ex.Message));
             }
@@ -274,8 +274,25 @@ namespace quanlykhoupdate.Service
                     _context.product_location.Update(item);
                     _context.SaveChanges();
 
+                    saveUpdateHistory(item.product_id, location.id, item.quantity.Value);
+
                 }
             }
+        }
+
+        private void saveUpdateHistory(int? productId, int locationAddrId, int quantity)
+        {
+            var updateHistory = new update_history
+            {
+                product_id = productId,
+                location_addr_id = locationAddrId,
+                quantity = quantity,
+                status = 2,
+                last_modify_date = DateTime.UtcNow
+            };
+
+            _context.update_history.Add(updateHistory);
+            _context.SaveChanges();
         }
 
         //private void UpdateLocationData(product_location data, location_addr location, int? quantity)
