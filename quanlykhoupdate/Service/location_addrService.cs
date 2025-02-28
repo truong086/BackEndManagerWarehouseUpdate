@@ -20,14 +20,33 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var data = _context.location_addr.ToList();
+                var data = _context.location_addr
+    .Include(pl => pl.product_Locations)
+    .ThenInclude(p => p.products)
+    .ThenInclude(s => s.suppliers)
+    .SelectMany(x => x.product_Locations)
+    .Where(x => x.location_Addrs.code_location_addr.Contains(name))
+    .Select(x => new Location_addrDTO
+    {
+        id = x.product_id,
+        code = x.location_Addrs.code_location_addr,
+        title = x.products.title,
+        area = x.location_Addrs.area,
+        line = x.location_Addrs.line,
+        shelf = x.location_Addrs.shelf,
+        quantity = x.quantity,
+        supplier = x.products.suppliers.title,
+        supplierName = x.products.suppliers.name,
 
-                if (!string.IsNullOrEmpty(name))
-                    data = data.Where(x => x.code_location_addr.Contains(name)).ToList();
+    })
+    .ToList();
 
-                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                //if (!string.IsNullOrEmpty(name))
+                //    data = data.Where(x => x.code.Contains(name)).ToList();
+
+                var pageList = new PageList<object>(data, page - 1, pageSize);
                 if(pageList.Count <= 0)
-                    pageList = new PageList<object>(loadData(data), 0, pageSize);
+                    pageList = new PageList<object>(data, 0, pageSize);
 
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
