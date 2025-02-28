@@ -329,8 +329,11 @@ namespace quanlykhoupdate.Service
 
         public byte[] FindAllDownLoadExcel(searchDatetimePlan data)
         {
-            DateTimeOffset dateFromUtc = data.datefrom.Value.ToUniversalTime();
-            DateTimeOffset dateToUtc = data.dateto.Value.ToUniversalTime(); // Lấy hết ngày
+            //DateTimeOffset dateFromUtc = data.datefrom.Value.ToUniversalTime();
+            //DateTimeOffset dateToUtc = data.dateto.Value.ToUniversalTime(); // Lấy hết ngày
+            var dateFromUtc = data.datefrom.Value.AddHours(-8);
+            var dateToUtc = data.dateto.Value.AddHours(-8);
+
             var list = _context.plan.Where(x => x.time >= dateFromUtc && x.time <= dateToUtc).ToList();
             using (var package = new ExcelPackage())
             {
