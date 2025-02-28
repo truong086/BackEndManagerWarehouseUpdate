@@ -122,6 +122,9 @@ namespace quanlykhoupdate.Service
                 var data = _context.plan.Where(x => x.status != 1).OrderByDescending(x => x.id).ToList();
 
                 var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+
+                if (pageList.Count <= 0)
+                    pageList = new PageList<object>(loadData(data), 0, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -144,6 +147,9 @@ namespace quanlykhoupdate.Service
                 var data = _context.plan.Where(x => x.status == 1).OrderByDescending(x => x.id).ToList();
 
                 var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+
+                if (pageList.Count <= 0)
+                    pageList = new PageList<object>(loadData(data), 0, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -445,6 +451,8 @@ namespace quanlykhoupdate.Service
                     .ToListAsync();
 
                 var pageList = new PageList<object>(loadData(data), datas.page - 1, datas.pageSize);
+                if (pageList.Count <= 0)
+                    pageList = new PageList<object>(loadData(data), 0, datas.pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -482,6 +490,7 @@ namespace quanlykhoupdate.Service
                 var dataList = _context.plan.OrderByDescending(x => x.id).ToList();
 
                 var pageList = new PageList<object>(loadData(dataList), page - 1, pageSize);
+
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -566,6 +575,8 @@ namespace quanlykhoupdate.Service
                     .ToListAsync();
 
                 var pageList = new PageList<object>(loadData(data), datas.page - 1, datas.pageSize);
+                if(pageList.Count <= 0)
+                    pageList = new PageList<object>(loadData(data), 0, datas.pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -601,6 +612,30 @@ namespace quanlykhoupdate.Service
                 {
                     data = pageList,
                     datas.page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> FindAllNoDoneAndDone(int page = 1, int pageSize = 20)
+        {
+            try
+            {
+                var data = _context.plan.OrderByDescending(x => x.id).ToList();
+
+                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                if (pageList.Count <= 0)
+                    pageList = new PageList<object>(loadData(data), 0, pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    page,
                     pageList.pageSize,
                     pageList.totalCounts,
                     pageList.totalPages

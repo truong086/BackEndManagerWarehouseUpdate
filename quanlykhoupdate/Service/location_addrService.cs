@@ -64,6 +64,7 @@ namespace quanlykhoupdate.Service
                         shelf = item.shelf,
                         quantity = checkProduct_location.quantity,
                         supplier = checkProduct_location.products == null || checkProduct_location.products.suppliers == null ? Status.DATANULL : checkProduct_location.products.suppliers.title,
+                        supplierName = checkProduct_location.products == null || checkProduct_location.products.suppliers == null ? Status.DATANULL : checkProduct_location.products.suppliers.name,
                         history = loadDataHistory(checkProduct_location.products == null ? new product() : checkProduct_location.products),
                         InOutByProducts = loadDataInOut(checkProduct_location.products == null ? 0 : checkProduct_location.products.id)
                     });

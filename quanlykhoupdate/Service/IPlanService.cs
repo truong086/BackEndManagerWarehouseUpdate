@@ -16,6 +16,7 @@ namespace quanlykhoupdate.Service
         Task<PayLoad<object>> FindAllDataByNoDoneAndDone(searchDataPost data);
         Task<PayLoad<object>> FindAllDataByNoDone(searchDataPost data);
         Task<PayLoad<object>> FindAllNoDone(int page = 1, int pageSize = 20);
+        Task<PayLoad<object>> FindAllNoDoneAndDone(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindByDataAreaLineShelf(SearchAreaLineShelf data);
         Task<PayLoad<object>> FindByDataTimeAll(searchDatetimePlan data, int page = 1, int pageSize = 20);
         Task<PayLoad<object>> checkPlanLocationAdd(string code);

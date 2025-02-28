@@ -11,6 +11,7 @@ namespace quanlykhoupdate.ViewModel
         public string? line { get; set; }
         public string? shelf { get; set; }
         public string? supplier { get; set; }
+        public string? supplierName { get; set; }
         public int? quantity { get; set; }
         public List<object>? history { get; set; }
         public List<InOutByProduct>? InOutByProducts { get; set; }
