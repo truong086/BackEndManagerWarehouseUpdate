@@ -176,7 +176,8 @@ namespace quanlykhoupdate.Service
             var checkData = _context.update_history.Include(l => l.location_Addrs).Where(x => x.product_id == data.id && x.status == 2)
                 .Select(x => new
                 {
-                    location_old = x.location_Addrs
+                    location_old = x.location_Addrs,
+                    time = x.last_modify_date
                 })
                 .ToList<dynamic>();
 

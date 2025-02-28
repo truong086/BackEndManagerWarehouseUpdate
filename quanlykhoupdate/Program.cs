@@ -28,7 +28,7 @@ var corsBuilder = new CorsPolicyBuilder();
 corsBuilder.AllowAnyHeader();
 corsBuilder.AllowAnyMethod();
 corsBuilder.AllowAnyOrigin();
-corsBuilder.WithOrigins("http://52.184.83.97:8081", "http://localhost:8081"); // Đây là Url bên frontEnd
+corsBuilder.WithOrigins("http://52.184.83.97:8081"); // Đây là Url bên frontEnd
 //corsBuilder.WithOrigins("http://localhost:8081"); // Đây là Url bên frontEnd
 corsBuilder.AllowCredentials();
 builder.Services.AddCors(options =>
