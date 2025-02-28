@@ -13,6 +13,7 @@ namespace quanlykhoupdate.Service
         Task<PayLoad<object>> FindOne(int id);
         Task<PayLoad<object>> FindAllDone(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindAllDataByDone(searchDataPost data);
+        Task<PayLoad<object>> FindAllDataByNoDoneAndDone(searchDataPost data);
         Task<PayLoad<object>> FindAllDataByNoDone(searchDataPost data);
         Task<PayLoad<object>> FindAllNoDone(int page = 1, int pageSize = 20);
         Task<PayLoad<object>> FindByDataAreaLineShelf(SearchAreaLineShelf data);

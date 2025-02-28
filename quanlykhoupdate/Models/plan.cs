@@ -12,6 +12,6 @@ namespace quanlykhoupdate.Models
         public location_addr? location_Addr_New { get; set; }
         public location_addr? location_Addr_Old { get; set; }
         public int? status { get; set; }
-        public DateTimeOffset? time { get; set; }
+        public DateTimeOffset? time { get; set; } = DateTimeOffset.UtcNow;
     }
 }

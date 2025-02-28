@@ -434,8 +434,11 @@ namespace quanlykhoupdate.Service
                 //DateTime dateFrom = datas.datefrom?.UtcDateTime.Date ?? DateTime.UtcNow.Date;
                 //DateTime dateTo = datas.dateto?.UtcDateTime.Date.AddHours(1) ?? DateTime.UtcNow.Date.AddHours(1);
 
-                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToOffset(TimeSpan.FromHours(8));
-                DateTimeOffset dateToUtc = datas.dateto.Value.ToOffset(TimeSpan.FromHours(8)); // Lấy hết ngày
+                //DateTimeOffset dateFromUtc = datas.datefrom.Value.ToOffset(TimeSpan.FromHours(8));
+                //DateTimeOffset dateToUtc = datas.dateto.Value.ToOffset(TimeSpan.FromHours(8)); // Lấy hết ngày
+
+                var dateFromUtc = datas.datefrom.Value.AddHours(-8);
+                var dateToUtc = datas.dateto.Value.AddHours(-8);
                 var data = await _context.plan
                     .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status == 1)
                     .OrderByDescending(x => x.id)
@@ -551,12 +554,45 @@ namespace quanlykhoupdate.Service
             try
             {
                 // Chuyển datefrom và dateto về UTC (nếu dữ liệu trong DB lưu UTC)
-                DateTimeOffset dateFromUtc = datas.datefrom.Value.ToOffset(TimeSpan.FromHours(8));
-                DateTimeOffset dateToUtc = datas.dateto.Value.ToOffset(TimeSpan.FromHours(8)); // Lấy hết ngày
+                //DateTimeOffset dateFromUtc = datas.datefrom.Value.ToOffset(TimeSpan.FromHours(0));
+                //DateTimeOffset dateToUtc = datas.dateto.Value.ToOffset(TimeSpan.FromHours(0)); // Lấy hết ngày
 
+                var dateFromUtc = datas.datefrom.Value.AddHours(-8);
+                var dateToUtc = datas.dateto.Value.AddHours(-8);
                 // Lọc dữ liệu trong khoảng thời gian
                 var data = await _context.plan
                     .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status != 1)
+                    .OrderByDescending(x => x.id)
+                    .ToListAsync();
+
+                var pageList = new PageList<object>(loadData(data), datas.page - 1, datas.pageSize);
+                return await Task.FromResult(PayLoad<object>.Successfully(new
+                {
+                    data = pageList,
+                    datas.page,
+                    pageList.pageSize,
+                    pageList.totalCounts,
+                    pageList.totalPages
+                }));
+            }
+            catch (Exception ex)
+            {
+                return await Task.FromResult(PayLoad<object>.CreatedFail(ex.Message));
+            }
+        }
+
+        public async Task<PayLoad<object>> FindAllDataByNoDoneAndDone(searchDataPost datas)
+        {
+            try { 
+                // Chuyển datefrom và dateto về UTC (nếu dữ liệu trong DB lưu UTC)
+                //DateTimeOffset dateFromUtc = datas.datefrom.Value.ToOffset(TimeSpan.FromHours(0));
+                //DateTimeOffset dateToUtc = datas.dateto.Value.ToOffset(TimeSpan.FromHours(0)); // Lấy hết ngày
+
+                var dateFromUtc = datas.datefrom.Value.AddHours(-8);
+                var dateToUtc = datas.dateto.Value.AddHours(-8);
+                // Lọc dữ liệu trong khoảng thời gian
+                var data = await _context.plan
+                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc)
                     .OrderByDescending(x => x.id)
                     .ToListAsync();
 
