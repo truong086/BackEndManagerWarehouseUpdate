@@ -18,7 +18,7 @@ namespace quanlykhoupdate.Controllers
 
         [HttpPost]
         [Route(nameof(Add))]
-        public async Task<PayLoad<inboundDTO>> Add (inboundDTO data)
+        public async Task<PayLoad<outboundDTO>> Add (outboundDTO data)
         {
             return await _ioutboundService.Add(data);
         }

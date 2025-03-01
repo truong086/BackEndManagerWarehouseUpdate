@@ -21,7 +21,7 @@ namespace quanlykhoupdate.Service
                 if(!checkProduct(inboundDTO.productListInbounds))
                     return await Task.FromResult(PayLoad<inboundDTO>.CreatedFail(Status.DATANULL));
 
-                var checkDataProduct = inboundDTO.productListInbounds.GroupBy(x => x.product) // Kiểm tra dữ liệu chuyền lên của product có trùng nhau không
+                var checkDataProduct = inboundDTO.productListInbounds.GroupBy(x => x.productId) // Kiểm tra dữ liệu chuyền lên của product có trùng nhau không
                                         .Where(x => x.Count() > 1)
                                         .Select(g => new
                                         {
@@ -59,7 +59,7 @@ namespace quanlykhoupdate.Service
         {
             foreach(var item in data)
             {
-                var checkproduct = _context.product.FirstOrDefault(x => x.title == item.product);
+                var checkproduct = _context.product.FirstOrDefault(x => x.id == item.productId);
                 _context.inbound_product.Add(new inbound_product
                 {
                     inbounds = dataNew,
@@ -76,11 +76,11 @@ namespace quanlykhoupdate.Service
         {
             foreach(var item in data)
             {
-                var checkProduct = _context.product.FirstOrDefault(x => x.title == item.product);
+                var checkProduct = _context.product.FirstOrDefault(x => x.id == item.productId);
                 if (checkProduct == null)
                     return false;
 
-                var checkLocation = _context.product_location.FirstOrDefault(x => x.product_id == checkProduct.id);
+                var checkLocation = _context.product_location.FirstOrDefault(x => x.product_id == item.productId);
                 if (checkLocation == null)
                     return false;
 
