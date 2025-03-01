@@ -556,7 +556,7 @@ namespace quanlykhoupdate.Service
         {
             var list = new List<InOutByProduct>();
 
-            var checkUpdateHistory = _context.update_history.Include(p => p.products).Include(l => l.location_Addrs).Where(x => x.product_id == id).ToList();
+            var checkUpdateHistory = _context.update_history.Include(p => p.products).Include(l => l.location_Addrs).Where(x => x.product_id == id && (x.status == 1 || x.status == 0)).ToList();
 
             foreach (var product in checkUpdateHistory)
             {
@@ -740,7 +740,7 @@ namespace quanlykhoupdate.Service
                 shelf = lc.location_Addrs.shelf,
                 quantity = lc.quantity
             }).ToList(),
-            inOutByProducts = x.update_Histories.Select(ud => new InOutByProduct
+            inOutByProducts = x.update_Histories.Where(s => s.status == 1 || s.status == 0).Select(ud => new InOutByProduct
             {
                 location = ud.location_Addrs.code_location_addr,
                 quantity = ud.quantity,
