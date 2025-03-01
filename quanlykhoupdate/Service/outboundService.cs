@@ -12,13 +12,13 @@ namespace quanlykhoupdate.Service
         {
             _context = context;
         }
-        public async Task<PayLoad<inboundDTO>> Add(inboundDTO inboundDTO)
+        public async Task<PayLoad<outboundDTO>> Add(outboundDTO inboundDTO)
         {
             try { 
-                if(!checkProduct(inboundDTO.productListInbounds))
-                    return await Task.FromResult(PayLoad<inboundDTO>.CreatedFail(Status.DATANULL));
+                if(!checkProduct(inboundDTO.productListOutbounds))
+                    return await Task.FromResult(PayLoad<outboundDTO>.CreatedFail(Status.DATANULL));
 
-                var checkDataProduct = inboundDTO.productListInbounds.GroupBy(x => x.product) // Kiểm tra dữ liệu chuyền lên của product có trùng nhau không
+                var checkDataProduct = inboundDTO.productListOutbounds.GroupBy(x => x.productTitle) // Kiểm tra dữ liệu chuyền lên của product có trùng nhau không
                                         .Where(x => x.Count() > 1)
                                         .Select(g => new
                                         {
@@ -28,7 +28,7 @@ namespace quanlykhoupdate.Service
 
                 if (checkDataProduct.Any())
                 {
-                    return await Task.FromResult(PayLoad<inboundDTO>.CreatedFail(Status.DATATONTAI));
+                    return await Task.FromResult(PayLoad<outboundDTO>.CreatedFail(Status.DATATONTAI));
                 }
                 _context.outbound.Add(new outbound
                 {
@@ -41,48 +41,73 @@ namespace quanlykhoupdate.Service
                 var dataNew = _context.outbound.OrderByDescending(x => x.created_time).FirstOrDefault();
                 dataNew.code = RanDomCode.geneAction(6) + dataNew.id;
 
-                Addproductinbound(inboundDTO.productListInbounds, dataNew);
+                var success = Addproductinbound(inboundDTO.productListOutbounds, dataNew);
 
-                return await Task.FromResult(PayLoad<inboundDTO>.Successfully(inboundDTO));
+                if (!success)
+                {
+                    return await Task.FromResult(PayLoad<outboundDTO>.CreatedFail(Status.DATANULL));
+                }
+
+                return await Task.FromResult(PayLoad<outboundDTO>.Successfully(inboundDTO));
             }
             catch(Exception ex)
             {
-                return await Task.FromResult(PayLoad<inboundDTO>.CreatedFail(ex.Message));
+                return await Task.FromResult(PayLoad<outboundDTO>.CreatedFail(ex.Message));
             }
         }
 
-        private void Addproductinbound(List<productListInbound> data, outbound dataNew)
+        private bool Addproductinbound(List<productListOutbound> data, outbound dataNew)
         {
+            bool productAdded = false;
             foreach (var item in data)
             {
-                var checkproduct = _context.product.FirstOrDefault(x => x.title == item.product);
-                _context.outbound_product.Add(new outbound_product
+                var checkproduct = _context.product.Where(x => x.title == item.productTitle).ToList();
+                if(checkproduct != null)
                 {
-                    outbounds = dataNew,
-                    outbound_id = dataNew.id,
-                    products = checkproduct,
-                    product_id = checkproduct.id,
-                    quantity = item.quantity.Value
-                });
+                    foreach(var product in checkproduct)
+                    {
+                        var checkQuantity = _context.product_location.FirstOrDefault(x => x.product_id == product.id);
+                        
+                        if(checkQuantity != null&& checkQuantity.quantity >= item.quantity)
+                        {
+                            _context.outbound_product.Add(new outbound_product
+                            {
+                                outbounds = dataNew,
+                                outbound_id = dataNew.id,
+                                products = product,
+                                product_id = product.id,
+                                quantity = item.quantity.Value
+                            });
 
-                _context.SaveChanges();
+                            _context.SaveChanges();
+                            productAdded = true;
+                            break;
+                        }
+                        
+                    }
+                }
+                
             }
+            return productAdded;
         }
 
-        private bool checkProduct(List<productListInbound> data)
+        private bool checkProduct(List<productListOutbound> data)
         {
             foreach (var item in data)
             {
-                var checkProduct = _context.product.FirstOrDefault(x => x.title == item.product);
+                var checkProduct = _context.product.Where(x => x.title == item.productTitle).ToList();
                 if (checkProduct == null)
                     return false;
 
-                var checkLocation = _context.product_location.FirstOrDefault(x => x.product_id == checkProduct.id);
-                if (checkLocation == null)
-                    return false;
-                
-                if(item.quantity > checkLocation.quantity)
-                    return false;
+                foreach(var product in checkProduct)
+                {
+                    var checkLocation = _context.product_location.FirstOrDefault(x => x.product_id == product.id);
+                    if (checkLocation == null)
+                        return false;
+
+                    //if (item.quantity > checkLocation.quantity)
+                    //    return false;
+                }
 
             }
             return true;
