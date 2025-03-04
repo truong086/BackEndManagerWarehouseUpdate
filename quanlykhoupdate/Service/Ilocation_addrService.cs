@@ -1,4 +1,5 @@
 ﻿using quanlykhoupdate.common;
+using quanlykhoupdate.ViewModel;
 
 namespace quanlykhoupdate.Service
 {
@@ -12,5 +13,7 @@ namespace quanlykhoupdate.Service
         public byte[] FindAllDataByDateExcel(string code);
 
         Task<PayLoad<object>> FindAllDataShelfOne(string line, string area);
+        Task<PayLoad<object>> FindAllDataDashBoad(int page = 1, int pageSize = 20);
+        Task<PayLoad<object>> FindAllDataDashBoadSearch(FindAllDataDashBoard data);
     }
 }

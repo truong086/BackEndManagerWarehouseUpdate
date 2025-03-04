@@ -13,6 +13,7 @@ namespace quanlykhoupdate.Service
     {
         private readonly DBContext _context;
         private readonly IUserTokenService _userTokenService;
+        private List<DateTimeOffset> dataIntId;
         public PlanService(DBContext context, IUserTokenService userTokenService)
         {
             _context = context;
@@ -119,12 +120,14 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var data = _context.plan.Where(x => x.status != 1).OrderByDescending(x => x.id).ToList();
+                var data = _context.plan.Where(x => x.status != 1).ToList();
 
-                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                var dataMap = loadData(data).OrderByDescending(x => x.updateat);
+
+                var pageList = new PageList<object>(dataMap, page - 1, pageSize);
 
                 if (pageList.Count <= 0)
-                    pageList = new PageList<object>(loadData(data), 0, pageSize);
+                    pageList = new PageList<object>(dataMap, 0, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -144,12 +147,14 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var data = _context.plan.Where(x => x.status == 1).OrderByDescending(x => x.id).ToList();
+                var data = _context.plan.Where(x => x.status == 1).ToList();
 
-                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                var dataMap = loadData(data).OrderByDescending(x => x.updateat);
+
+                var pageList = new PageList<object>(dataMap, page - 1, pageSize);
 
                 if (pageList.Count <= 0)
-                    pageList = new PageList<object>(loadData(data), 0, pageSize);
+                    pageList = new PageList<object>(dataMap, 0, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -173,14 +178,125 @@ namespace quanlykhoupdate.Service
             {
                 
                 list.Add(findOneDataPlan(plan));
+                
             }
 
             return list;
         }
 
+        //private FindAllPlanData findOneDataPlan(plan item)
+        //{
+        //    if (item.status == 1)
+        //    {
+        //        // Dùng LINQ mới của bạn để lấy firstValidUh
+        //        var firstValidUh = from uh in _context.update_history
+        //                           where uh.status == 2 && !dataIntId.Contains(uh.last_modify_date.Value)
+        //                           join p in _context.plan on uh.location_addr_id equals p.location_addr_id_new into planNew
+        //                           from pNew in planNew.DefaultIfEmpty()
+        //                           join p in _context.plan on uh.location_addr_id equals p.location_addr_id_old into planOld
+        //                           from pOld in planOld.DefaultIfEmpty()
+        //                           where (pNew.status == 1 || pOld.status == 1) && (uh.last_modify_date > (pNew != null && pNew.time != null ? pNew.time : DateTimeOffset.MinValue) ||
+        //                                 uh.last_modify_date > (pOld != null && pOld.time != null ? pOld.time : DateTimeOffset.MinValue))
+        //                           group uh by uh.location_addr_id into g
+        //                           select new
+        //                           {
+
+        //                               LocationAddrId = g.Key,
+        //                               FirstModifyDate = g.Min(x => x.last_modify_date)
+        //                           };
+
+        //        var firstModifyDate = firstValidUh
+        //              .Select(x => x.FirstModifyDate)
+        //              .FirstOrDefault();
+
+        //        dataIntId.Add(firstModifyDate.Value);
+
+        //        // Truy vấn chính
+        //        var query = (from p in _context.plan
+        //                    where p.id == item.id && p.status == 1
+        //                    join uhNew in firstValidUh on p.location_addr_id_new equals uhNew.LocationAddrId into uhNewGroup
+        //                    from uhNew in uhNewGroup.DefaultIfEmpty()
+        //                    join uhOld in firstValidUh on p.location_addr_id_old equals uhOld.LocationAddrId into uhOldGroup
+        //                    from uhOld in uhOldGroup.DefaultIfEmpty()
+        //                    select new FindAllPlanData
+        //                    {
+        //                        id = p.id,
+        //                        locationNew = _context.location_addr.Where(l => l.id == p.location_addr_id_new)
+        //                                        .Select(l => l.code_location_addr)
+        //                                        .FirstOrDefault(),
+        //                        areaNew = _context.location_addr.Where(l => l.id == p.location_addr_id_new)
+        //                                        .Select(l => l.area)
+        //                                        .FirstOrDefault(),
+        //                        lineNew = _context.location_addr.Where(l => l.id == p.location_addr_id_new)
+        //                                        .Select(l => l.line)
+        //                                        .FirstOrDefault(),
+        //                        shelfNew = _context.location_addr.Where(l => l.id == p.location_addr_id_new)
+        //                                        .Select(l => l.shelf)
+        //                                        .FirstOrDefault(),
+        //                        locationOld = _context.location_addr.Where(l => l.id == p.location_addr_id_old)
+        //                                        .Select(l => l.code_location_addr)
+        //                                        .FirstOrDefault(),
+        //                        areaOld = _context.location_addr.Where(l => l.id == p.location_addr_id_old)
+        //                                        .Select(l => l.area)
+        //                                        .FirstOrDefault(),
+        //                        lineOld = _context.location_addr.Where(l => l.id == p.location_addr_id_old)
+        //                                        .Select(l => l.line)
+        //                                        .FirstOrDefault(),
+        //                        shelfOld = _context.location_addr.Where(l => l.id == p.location_addr_id_old)
+        //                                        .Select(l => l.shelf)
+        //                                        .FirstOrDefault(),
+        //                        status = p.status,
+        //                        updateat = uhNew.FirstModifyDate
+        //                    }).FirstOrDefault();
+
+        //        return query;
+        //    }
+        //    else
+        //    {
+        //        // Truy vấn khi item.status != 1 (giữ nguyên code cũ)
+        //        var checkDataOld = _context.location_addr
+        //            .Where(x => x.id == item.location_addr_id_old)
+        //            .Select(x => new
+        //            {
+        //                x.id,
+        //                locationOld = x.code_location_addr,
+        //                x.area,
+        //                x.line,
+        //                x.shelf
+        //            })
+        //            .FirstOrDefault();
+
+        //        var checkDataNew = _context.location_addr
+        //            .Where(x => x.id == item.location_addr_id_new)
+        //            .Select(x => new
+        //            {
+        //                x.id,
+        //                locationNew = x.code_location_addr,
+        //                x.area,
+        //                x.line,
+        //                x.shelf
+        //            })
+        //            .FirstOrDefault();
+
+        //        return new FindAllPlanData
+        //        {
+        //            id = item.id,
+        //            locationNew = checkDataNew?.locationNew,
+        //            areaNew = checkDataNew?.area,
+        //            lineNew = checkDataNew?.line,
+        //            shelfNew = checkDataNew?.shelf,
+        //            locationOld = checkDataOld?.locationOld,
+        //            areaOld = checkDataOld?.area,
+        //            lineOld = checkDataOld?.line,
+        //            shelfOld = checkDataOld?.shelf,
+        //            status = item.status,
+        //            updateat = item.time
+        //        };
+        //    }
+        //}
+
         private FindAllPlanData findOneDataPlan(plan item)
         {
-            
             var checkDataOld = _context.location_addr.Select(x => new
             {
                 id = x.id,
@@ -199,20 +315,21 @@ namespace quanlykhoupdate.Service
             }).FirstOrDefault(x => x.id == item.location_addr_id_new);
 
             return new FindAllPlanData
-            {
-                id = item.id,
-                locationNew = checkDataNew.locationNew,
-                areaNew = checkDataNew.area,
-                lineNew = checkDataNew.line,
-                shelfNew = checkDataNew.shelf,
-                locationOld = checkDataOld.locationOld,
-                areaOld = checkDataOld.area,
-                lineOld = checkDataOld.line,
-                shelfOld = checkDataOld.shelf,
-                status = item.status,
-                updateat = item.time
-            };
+                {
+                    id = item.id,
+                    locationNew = checkDataNew?.locationNew,
+                    areaNew = checkDataNew?.area,
+                    lineNew = checkDataNew?.line,
+                    shelfNew = checkDataNew?.shelf,
+                    locationOld = checkDataOld?.locationOld,
+                    areaOld = checkDataOld?.area,
+                    lineOld = checkDataOld?.line,
+                    shelfOld = checkDataOld?.shelf,
+                    status = item.status,
+                    updateat = item.time
+                };
         }
+
         public async Task<PayLoad<UpdatePlan>> Update(UpdatePlan planData)
         {
             try
@@ -233,6 +350,8 @@ namespace quanlykhoupdate.Service
                     UpdateLocationData(checkLocationNew, checkLocationOldItem);
 
                     checkPlan.status = 1;
+
+                    checkPlan.time = DateTimeOffset.UtcNow;
                 }
                 else
                 {
@@ -448,14 +567,14 @@ namespace quanlykhoupdate.Service
 
                 var dateFromUtc = datas.datefrom.Value.AddHours(-8);
                 var dateToUtc = datas.dateto.Value.AddHours(-8);
-                var data = await _context.plan
-                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc && x.status == 1)
-                    .OrderByDescending(x => x.id)
-                    .ToListAsync();
+                var data = _context.plan.Where(x => x.status == 1)
+                    .ToList();
 
-                var pageList = new PageList<object>(loadData(data), datas.page - 1, datas.pageSize);
+                var dataMap = loadData(data).Where(x => x.updateat >= dateFromUtc && x.updateat <= dateToUtc).OrderByDescending(x => x.updateat);
+                
+                var pageList = new PageList<object>(dataMap, datas.page - 1, datas.pageSize);
                 if (pageList.Count <= 0)
-                    pageList = new PageList<object>(loadData(data), 0, datas.pageSize);
+                    pageList = new PageList<object>(dataMap, 0, datas.pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -605,12 +724,15 @@ namespace quanlykhoupdate.Service
                 var dateFromUtc = datas.datefrom.Value.AddHours(-8);
                 var dateToUtc = datas.dateto.Value.AddHours(-8);
                 // Lọc dữ liệu trong khoảng thời gian
-                var data = await _context.plan
-                    .Where(x => x.time >= dateFromUtc && x.time <= dateToUtc)
-                    .OrderByDescending(x => x.id)
-                    .ToListAsync();
+                var data = _context.plan
+                    .ToList();
 
-                var pageList = new PageList<object>(loadData(data), datas.page - 1, datas.pageSize);
+                var dataMap = loadData(data).Where(x => x.updateat >= dateFromUtc && x.updateat <= dateToUtc).OrderByDescending(x => x.updateat).ToList();
+
+                var pageList = new PageList<object>(dataMap, datas.page - 1, datas.pageSize);
+                if(pageList.Count <= 0)
+                    pageList = new PageList<object>(dataMap, 0, datas.pageSize);
+
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,
@@ -630,11 +752,13 @@ namespace quanlykhoupdate.Service
         {
             try
             {
-                var data = _context.plan.OrderByDescending(x => x.id).ToList();
+                dataIntId = new List<DateTimeOffset>();
+                var data = _context.plan.ToList();
 
-                var pageList = new PageList<object>(loadData(data), page - 1, pageSize);
+                var dataMap = loadData(data).OrderByDescending(x => x.updateat).ToList();
+                var pageList = new PageList<object>(dataMap, page - 1, pageSize);
                 if (pageList.Count <= 0)
-                    pageList = new PageList<object>(loadData(data), 0, pageSize);
+                    pageList = new PageList<object>(dataMap, 0, pageSize);
                 return await Task.FromResult(PayLoad<object>.Successfully(new
                 {
                     data = pageList,

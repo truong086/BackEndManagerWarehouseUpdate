@@ -34,6 +34,7 @@ namespace quanlykhoupdate.ViewModel
     {
         public string? shelf { get; set; }
         public List<string>? location { get; set; }
+        public List<int>? productIds { get; set; }
         public List<productbyShelf>? productbyShelf { get; set; }
         public List<listProductByLocationData>? listProductByLocationDatas { get; set; }
         public List<FindAllPlanData>? FindAllPlanDatas { get; set; }
@@ -41,7 +42,10 @@ namespace quanlykhoupdate.ViewModel
 
     public class productbyShelf
     {
+        public int Id { get; set; }
+        public int IdProduct { get; set; }
         public string? location { get; set;}
+        public string? supplier { get; set;}
         public string? title { get; set;}
         public int? quantity { get; set;}
     }

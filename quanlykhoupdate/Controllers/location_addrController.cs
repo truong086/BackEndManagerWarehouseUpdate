@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using quanlykhoupdate.common;
 using quanlykhoupdate.Service;
+using quanlykhoupdate.ViewModel;
 using System.IO;
 
 namespace quanlykhoupdate.Controllers
@@ -56,6 +57,20 @@ namespace quanlykhoupdate.Controllers
         public async Task<PayLoad<object>> FindAllDataShelfOne(string line, string area)
         {
             return await _location_addrService.FindAllDataShelfOne(line, area);
+        }
+
+        [HttpGet]
+        [Route(nameof(FindAllDataDashBoad))]
+        public async Task<PayLoad<object>> FindAllDataDashBoad(int page = 1, int pageSize = 20)
+        {
+            return await _location_addrService.FindAllDataDashBoad(page, pageSize);
+        }
+
+        [HttpPost]
+        [Route(nameof(FindAllDataDashBoadSearch))]
+        public async Task<PayLoad<object>> FindAllDataDashBoadSearch(FindAllDataDashBoard data)
+        {
+            return await _location_addrService.FindAllDataDashBoadSearch(data);
         }
 
         [HttpGet]
